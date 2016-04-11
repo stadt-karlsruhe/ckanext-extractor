@@ -30,7 +30,6 @@ def extract_metadata(document_url, solr_url):
     """
     Extract Metadata from content available at an URL.
     """
-    # FIXME: Fulltext is returned as HTML
     with tempfile.NamedTemporaryFile() as f:
         print('Created temporary file {}'.format(f.name))
         r = requests.get(document_url, stream=True)
@@ -40,5 +39,5 @@ def extract_metadata(document_url, solr_url):
         f.seek(0)
         print('Finished download from {}'.format(document_url))
         print('Uploading to {} for metadata extraction'.format(solr_url))
-        return pysolr.Solr(solr_url).extract(f)
+        return pysolr.Solr(solr_url).extract(f, extractFormat='text')
 
