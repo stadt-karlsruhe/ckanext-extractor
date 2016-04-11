@@ -66,8 +66,7 @@ setup(
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
     include_package_data=True,
-    package_data={
-    },
+    package_data={},
 
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages.
@@ -81,8 +80,12 @@ setup(
     entry_points='''
         [ckan.plugins]
         extractor=ckanext.extractor.plugin:ExtractorPlugin
-	[babel.extractors]
-	ckan = ckan.lib.extract:extract_ckan
+
+        [ckan.celery_task]
+        tasks = ckanext.extractor.plugin:task_imports
+
+        [babel.extractors]
+        ckan = ckan.lib.extract:extract_ckan
     ''',
 
     # If you are changing from the default layout of your extension, you may
@@ -97,3 +100,4 @@ setup(
         ],
     }
 )
+

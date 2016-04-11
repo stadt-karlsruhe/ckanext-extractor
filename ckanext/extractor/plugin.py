@@ -3,17 +3,14 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import io
+import collections
 import logging
-import tempfile
-
-from pylons import config
-import pysolr
-import requests
 
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as toolkit
+from pylons import config
 
+from .lib import send_task
 
 
 log = logging.getLogger(__name__)
@@ -27,23 +24,6 @@ def _is_package(obj):
     whether the dict contains an ``owner_org`` entry.
     """
     return 'owner_org' in obj
-
-
-def _extract(url):
-    """
-    Extract Metadata from content available at an URL.
-    """
-    # FIXME: Fulltext is returned as HTML
-    with tempfile.NamedTemporaryFile() as f:
-        log.debug('Created temporary file {}'.format(f.name))
-        r = requests.get(url, stream=True)
-        for chunk in r.iter_content(chunk_size=1024):
-            f.write(chunk)
-        f.flush()
-        f.seek(0)
-        log.debug('Finished download from {}'.format(url))
-        solr = pysolr.Solr(config.get('solr_url'))
-        return solr.extract(f)
 
 
 class ExtractorPlugin(plugins.SingletonPlugin):
@@ -65,22 +45,36 @@ class ExtractorPlugin(plugins.SingletonPlugin):
             log.debug('A package was created: {}'.format(obj['id']))
         else:
             log.debug('A resource was created: {}'.format(obj['id']))
+            send_task('update_resource_metadata', obj, config.get('solr_url'))
 
     def after_update(self, context, obj):
         if _is_package(obj):
             log.debug('A package was updated: {}'.format(obj['id']))
         else:
             log.debug('A resource was updated: {}'.format(obj['id']))
-            data = _extract(obj['url'])
-            log.debug('Full text: {}'.format(data['contents']))
+            send_task('update_resource_metadata', obj, config.get('solr_url'))
 
     def after_delete(self, context, obj):
-        if _is_package(obj):
+        # For IPackageController, `obj` is a dict, but for IResourceController
+        # it's a list of dicts. See https://github.com/ckan/ckan/issues/2949.
+        if isinstance(obj, collections.Mapping):
+            # Package
             log.debug('A package was deleted: {}'.format(obj['id']))
         else:
-            log.debug('A resource was deleted: {}'.format(obj['id']))
+            # Resource(s)
+            for resource in obj:
+                log.debug('A resource was deleted: {}'.format(resource['id']))
+                send_task('delete_resource_metadata', resource)
 
     def before_index(self, pkg_dict):
         log.debug('Package {} will be indexed'.format(pkg_dict['id']))
         return pkg_dict
+
+
+def task_imports():
+    """
+    Entry point for Celery task list.
+    """
+    return ['ckanext.extractor.tasks']
+
 
