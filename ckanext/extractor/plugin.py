@@ -6,12 +6,13 @@ from __future__ import absolute_import, print_function, unicode_literals
 import collections
 import logging
 
-import ckan.plugins as plugins
-import ckan.plugins.toolkit as toolkit
+from ckan import plugins
+from ckan.plugins import toolkit
 from pylons import config
 
 from .lib import send_task
 import ckanext.extractor.logic.action.get
+import ckanext.extractor.logic.action.update
 import ckanext.extractor.logic.auth
 
 
@@ -89,10 +90,12 @@ class ExtractorPlugin(plugins.SingletonPlugin):
 
     def get_actions(self):
         return {
-            'ckanext_extractor_metadata_show':
-                ckanext.extractor.logic.action.get.metadata_show,
+            'ckanext_extractor_metadata_extract':
+                ckanext.extractor.logic.action.update.metadata_extract,
             'ckanext_extractor_metadata_list':
                 ckanext.extractor.logic.action.get.metadata_list,
+            'ckanext_extractor_metadata_show':
+                ckanext.extractor.logic.action.get.metadata_show,
         }
 
     #
@@ -101,10 +104,12 @@ class ExtractorPlugin(plugins.SingletonPlugin):
 
     def get_auth_functions(self):
         return {
-            'ckanext_extractor_metadata_show':
-                ckanext.extractor.logic.auth.metadata_show,
+            'ckanext_extractor_metadata_extract':
+                ckanext.extractor.logic.auth.metadata_extract,
             'ckanext_extractor_metadata_list':
                 ckanext.extractor.logic.auth.metadata_list,
+            'ckanext_extractor_metadata_show':
+                ckanext.extractor.logic.auth.metadata_show,
         }
 
 

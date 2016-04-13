@@ -26,3 +26,10 @@ def metadata_list(context, data_dict):
     """
     return {'success': True}
 
+
+def metadata_extract(context, data_dict):
+    """
+    Only sysadmins can extract metadata.
+    """
+    return {'success': False}
+
