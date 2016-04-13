@@ -13,12 +13,12 @@ log = logging.getLogger(__name__)
 
 
 def _mandatory_id():
-    log.debug('_mandatory_id')
     return {
         'id': [not_empty, unicode],
     }
 
 
+metadata_delete = _mandatory_id
 metadata_extract = _mandatory_id
 
 

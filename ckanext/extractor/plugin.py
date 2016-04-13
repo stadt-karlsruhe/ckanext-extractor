@@ -8,12 +8,9 @@ import logging
 
 from ckan import plugins
 from ckan.plugins import toolkit
-from pylons import config
+from ckan.logic import get_action
 
-from .lib import send_task
-import ckanext.extractor.logic.action.get
-import ckanext.extractor.logic.action.update
-import ckanext.extractor.logic.auth
+from .logic import action, auth
 
 
 log = logging.getLogger(__name__)
@@ -54,17 +51,17 @@ class ExtractorPlugin(plugins.SingletonPlugin):
             log.debug('A package was created: {}'.format(obj['id']))
         else:
             log.debug('A resource was created: {}'.format(obj['id']))
-            send_task('update_resource_metadata', obj, config.get('solr_url'))
+            get_action('ckanext_extractor_metadata_extract')({}, obj)
 
     def after_update(self, context, obj):
         if _is_package(obj):
             log.debug('A package was updated: {}'.format(obj['id']))
         else:
             log.debug('A resource was updated: {}'.format(obj['id']))
-            send_task('update_resource_metadata', obj, config.get('solr_url'))
+            get_action('ckanext_extractor_metadata_extract')({}, obj)
 
     def after_delete(self, context, obj):
-        # For IPackageController, `obj` is a dict, but for IResourceController
+        # For IPackageController, obj is a dict, but for IResourceController
         # it's a list of dicts. See https://github.com/ckan/ckan/issues/2949.
         if isinstance(obj, collections.Mapping):
             # Package
@@ -78,10 +75,11 @@ class ExtractorPlugin(plugins.SingletonPlugin):
             # that the index is properly updated in that case.
             for resource in obj:
                 log.debug('A resource was deleted: {}'.format(resource['id']))
-                send_task('delete_resource_metadata', resource)
+                get_action('ckanext_extractor_metadata_delete')({}, resource)
 
     def before_index(self, pkg_dict):
         log.debug('Package {} will be indexed'.format(pkg_dict['id']))
+        # FIXME: Add metadata
         return pkg_dict
 
     #
@@ -90,12 +88,10 @@ class ExtractorPlugin(plugins.SingletonPlugin):
 
     def get_actions(self):
         return {
-            'ckanext_extractor_metadata_extract':
-                ckanext.extractor.logic.action.update.metadata_extract,
-            'ckanext_extractor_metadata_list':
-                ckanext.extractor.logic.action.get.metadata_list,
-            'ckanext_extractor_metadata_show':
-                ckanext.extractor.logic.action.get.metadata_show,
+            'ckanext_extractor_metadata_delete': action.metadata_delete,
+            'ckanext_extractor_metadata_extract': action.metadata_extract,
+            'ckanext_extractor_metadata_list': action.metadata_list,
+            'ckanext_extractor_metadata_show': action.metadata_show,
         }
 
     #
@@ -104,12 +100,10 @@ class ExtractorPlugin(plugins.SingletonPlugin):
 
     def get_auth_functions(self):
         return {
-            'ckanext_extractor_metadata_extract':
-                ckanext.extractor.logic.auth.metadata_extract,
-            'ckanext_extractor_metadata_list':
-                ckanext.extractor.logic.auth.metadata_list,
-            'ckanext_extractor_metadata_show':
-                ckanext.extractor.logic.auth.metadata_show,
+            'ckanext_extractor_metadata_delete': auth.metadata_delete,
+            'ckanext_extractor_metadata_extract': auth.metadata_extract,
+            'ckanext_extractor_metadata_list': auth.metadata_list,
+            'ckanext_extractor_metadata_show': auth.metadata_show,
         }
 
 
