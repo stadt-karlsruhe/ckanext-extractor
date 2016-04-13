@@ -44,6 +44,12 @@ Requirements
 For example, you might want to mention here which versions of CKAN this
 extension works with.
 
+This extension requires Celery for running background jobs asynchronously.
+Make sure that your Celery daemon is running:
+
+    . /usr/lib/ckan/default/bin/activate
+    paster --plugin=ckan celeryd -c /etc/ckan/default/production.ini
+
 
 ------------
 Installation

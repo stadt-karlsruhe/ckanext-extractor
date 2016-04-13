@@ -18,6 +18,8 @@ def send_task(name, *args):
     contain a ``.`` then it is prefixed with ``extractor.``.
 
     Any remaining arguments are passed to the task.
+
+    A random UUID is generated for the task ID.
     """
     # Late import at call time because it requires a running app
     from ckan.lib.celery_app import celery
