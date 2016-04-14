@@ -33,8 +33,8 @@ def send_task(name, *args):
     """
     Helper for sending a Celery task.
 
-    ``name`` is the name of the task to send. The name is automatically
-    prefixed with ``ckanext_extractor_.``.
+    ``name`` is the name of the task to send. If it doesn't contain a
+    ``.`` then it is automatically prefixed with ``ckanext_extractor.``.
 
     Any remaining arguments are passed to the task.
 
@@ -42,6 +42,7 @@ def send_task(name, *args):
     """
     # Late import at call time because it requires a running app
     from ckan.lib.celery_app import celery
-    return celery.send_task('ckanext_extractor_' + name, args,
-                            task_id=str(uuid.uuid4()))
+    if '.' not in name:
+        name = 'ckanext_extractor.' + name
+    return celery.send_task(name, args, task_id=str(uuid.uuid4()))
 

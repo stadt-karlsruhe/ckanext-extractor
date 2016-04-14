@@ -11,32 +11,17 @@ import ckan.plugins.toolkit as toolkit
 log = logging.getLogger(__name__)
 
 
-def metadata_delete(context, data_dict):
-    """
-    Only sysadmins can delete metadata.
-    """
-    return {'success': False}
-
-
-def metadata_extract(context, data_dict):
-    """
-    Only sysadmins can extract metadata.
-    """
+def _only_sysadmins(context, datadict):
     return {'success': False}
 
 
 @toolkit.auth_allow_anonymous_access
-def metadata_list(context, data_dict):
-    """
-    All users can read the list of resources with metadata.
-    """
+def _everybody(context, datadict):
     return {'success': True}
 
 
-@toolkit.auth_allow_anonymous_access
-def metadata_show(context, data_dict):
-    """
-    All users can read metadata.
-    """
-    return {'success': True}
+metadata_delete = _only_sysadmins
+metadata_extract = _only_sysadmins
+metadata_list = _everybody
+metadata_show = _everybody
 

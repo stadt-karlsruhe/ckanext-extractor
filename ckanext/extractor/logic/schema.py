@@ -3,28 +3,47 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from inspect import getmembers
 import logging
 
-from ckan.lib.navl.validators import not_empty
+from ckan.lib.navl.validators import ignore_missing, not_empty
 from ckan.logic.schema import default_pagination_schema
 
 
 log = logging.getLogger(__name__)
 
 
-def _mandatory_id():
-    return {
-        'id': [not_empty, unicode],
-    }
+class _Schema(object):
+    """
+    Pseudo-class for composable schema definitions.
+
+    Creating an instance of this class will return a dict with the
+    class' variables instead of a real instance. This allows you to
+    define composable schemas via inheritance::
+
+        class Schema1(_Schema):
+            field1 = [not_empty, unicode]
+
+        class Schema2(Schema1):
+            field2 = [ignore_missing, unicode]
+
+        print(Schema2())
+        # {
+        #   'field1': [not_empty, unicode],
+        #   'field2': [ignore_missing, unicode]
+        # }
+    """
+    def __new__(cls):
+        return {key: value for key, value in getmembers(cls) if not
+                key.startswith('__')}
 
 
-metadata_delete = _mandatory_id
-metadata_extract = _mandatory_id
+class _MandatoryID(_Schema):
+    id = [not_empty, unicode]
 
 
-def metadata_list():
-    return default_pagination_schema()
-
-
-metadata_show = _mandatory_id
+metadata_delete = _MandatoryID
+metadata_extract = _MandatoryID
+metadata_list = default_pagination_schema
+metadata_show = _MandatoryID
 

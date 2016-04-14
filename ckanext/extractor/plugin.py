@@ -11,6 +11,7 @@ from ckan.plugins import toolkit
 from ckan.logic import get_action
 
 from .logic import action, auth
+from . import model
 
 
 log = logging.getLogger(__name__)
@@ -32,15 +33,23 @@ class ExtractorPlugin(plugins.SingletonPlugin):
     plugins.implements(plugins.IResourceController, inherit=True)
     plugins.implements(plugins.IActions)
     plugins.implements(plugins.IAuthFunctions)
+    plugins.implements(plugins.IConfigurable)
 
     #
     # IConfigurer
     #
 
-    def update_config(self, config_):
-        toolkit.add_template_directory(config_, 'templates')
-        toolkit.add_public_directory(config_, 'public')
+    def update_config(self, config):
+        toolkit.add_template_directory(config, 'templates')
+        toolkit.add_public_directory(config, 'public')
         toolkit.add_resource('fanstatic', 'extractor')
+
+    #
+    # IConfigurable
+    #
+
+    def configure(self, config):
+        model.setup()
 
     #
     # IPackageController / IResourceController
@@ -112,5 +121,4 @@ def task_imports():
     Entry point for Celery task list.
     """
     return ['ckanext.extractor.tasks']
-
 

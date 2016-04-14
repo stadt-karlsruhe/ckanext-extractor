@@ -6,14 +6,28 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 
 import ckan.plugins.toolkit as toolkit
-from ckan.logic import get_action, validate
+from ckan.logic import validate
 from pylons import config
+from sqlalchemy.orm.exc import NoResultFound
 
-from .helpers import check_access, send_task
 from . import schema
+from .helpers import check_access, send_task
+from ..model import ResourceMetadatum
 
 
 log = logging.getLogger(__name__)
+
+
+@check_access('ckanext_extractor_metadata_delete')
+@validate(schema.metadata_delete)
+def metadata_delete(context, data_dict):
+    """
+    Delete the metadata for a resource.
+
+    :param string id: The ID or the name of the resource
+    """
+    log.debug('metadata_delete')
+    # FIXME: Implement this
 
 
 @check_access('ckanext_extractor_metadata_extract')
@@ -32,8 +46,9 @@ def metadata_extract(context, data_dict):
         :task_id: The ID of the background task
     """
     log.debug('metadata_extract')
-    res_dict = get_action('resource_show')(context, data_dict)
-    result = send_task('metadata_extract', res_dict, config.get('solr_url'))
+    res_dict = toolkit.get_action('resource_show')(context, data_dict)
+    result = send_task('metadata_extract', config['__file__'], res_dict,
+                       config['solr_url'])
     return {'task_id': result.task_id}
 
 
@@ -70,18 +85,10 @@ def metadata_show(context, data_dict):
     :rtype: dict
     """
     log.debug('metadata_show')
-    # FIXME: Implement this
-    return {}
-
-
-@check_access('ckanext_extractor_metadata_delete')
-@validate(schema.metadata_delete)
-def metadata_delete(context, data_dict):
-    """
-    Delete the metadata for a resource.
-
-    :param string id: The ID or the name of the resource
-    """
-    log.debug('metadata_delete')
-    # FIXME: Implement this
+    try:
+        datum = ResourceMetadatum.one(resource_id=data_dict['id'])
+    except NoResultFound:
+        raise toolkit.ObjectNotFound(
+            "No metadata found for resource '{}'.".format(data_dict['id']))
+    return {datum.key: datum.value}
 
