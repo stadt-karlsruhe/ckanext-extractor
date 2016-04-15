@@ -34,7 +34,7 @@ def metadata_extract(ini_path, resource, solr_url):
         print('Created new metadata')
     if metadata.last_url == resource['url']:
         print('Resource URL has not changed, exiting')
-        return metadata
+        return
     data = _download_and_extract(resource['url'], solr_url)
     print('Setting contents')
     metadata.meta.clear()
@@ -47,7 +47,6 @@ def metadata_extract(ini_path, resource, solr_url):
     metadata.last_extracted = datetime.datetime.now()
     print('Saving changes')
     metadata.save()
-    return metadata
 
 
 # Adapted from ckanext-archiver

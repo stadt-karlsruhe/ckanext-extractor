@@ -78,6 +78,50 @@ To install ckanext-extractor:
      sudo service apache2 reload
 
 
+
+Solr Configuration
+------------------
+`ckanext-extractor` uses CKAN's Apache Solr instance for two things:
+
+- Extracting text and metadata from resource files
+
+- Indexing the extracted information so that it can be used to find resources
+
+Both of these require some changes to the Solr configuration.
+
+By default, the necessary plugins for text and metadata extration are disabled
+in Solr. To enable them, find your main Solr configuration file (usually
+``/etc/solr/conf/solrconfig.xml``)::
+
+    <lib dir="../../dist/" regex="apache-solr-cell-\d.*\.jar" />
+    <lib dir="../../contrib/extraction/lib" regex=".*\.jar" />
+
+.. note::
+
+  The Solr packages on Ubuntu are broken_ and do not contain the necessary
+  files. You can simply download an `official release`_ of the same version,
+  unpack it to a suitable location (without installing it) and adjust the
+  ``dir`` arguments in the configuration lines above accordingly.
+
+.. _broken: https://bugs.launchpad.net/ubuntu/+source/lucene-solr/+bug/1565637
+.. _`official_release`: http://archive.apache.org/dist/lucene/solr
+
+Once the text and metadata have been extracted they need to be added to the
+Solr index. To set up the necessary Solr fields, add the following lines to
+your Solr schema configuration (usually ``/etc/solr/conf/schema.xml``)::
+
+    # Directly before the line that says "</fields>"
+    <dynamicField name="ckanext-extractor_*" type="text" indexed="true" stored="false"/>
+
+    # Directly before the line that says "</schema>"
+    <copyField source="ckanext-extractor_*" dest="text"/>
+
+Make sure to restart Solr after you have applied the changes. For example, if
+you're using Jetty as an application server for Solr::
+
+    sudo service jetty restart
+
+
 ---------------
 Config Settings
 ---------------

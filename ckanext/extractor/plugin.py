@@ -4,6 +4,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import collections
+import json
 import logging
 
 from ckan import plugins
@@ -15,6 +16,9 @@ from . import model
 
 
 log = logging.getLogger(__name__)
+
+
+SOLR_FIELD = 'ckanext-extractor_{id}_{key}'
 
 
 def _is_package(obj):
@@ -88,7 +92,12 @@ class ExtractorPlugin(plugins.SingletonPlugin):
 
     def before_index(self, pkg_dict):
         log.debug('Package {} will be indexed'.format(pkg_dict['id']))
-        # FIXME: Add metadata
+        data_dict = json.loads(pkg_dict['data_dict'])
+        for resource in data_dict['resources']:
+            metadata = get_action('ckanext_extractor_metadata_show')({}, resource)
+            for key, value in metadata['meta'].iteritems():
+                field = SOLR_FIELD.format(id=resource['id'], key=key)
+                pkg_dict[field] = value
         return pkg_dict
 
     #
