@@ -58,6 +58,10 @@ class BaseObject(DomainObject):
         cls.Session.commit()
         return instance
 
+    @classmethod
+    def all(cls):
+        return cls.Session.query(cls).all()
+
 
 # Gets called from ckanext.extractor.plugin.ExtractorPlugin.configure
 def setup():

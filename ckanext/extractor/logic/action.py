@@ -18,6 +18,14 @@ from ..model import ResourceMetadata, ResourceMetadatum
 log = logging.getLogger(__name__)
 
 
+def _get_metadata(resource_id):
+    try:
+        return ResourceMetadata.one(resource_id=resource_id)
+    except NoResultFound:
+        raise toolkit.ObjectNotFound(
+            "No metadata found for resource '{}'.".format(resource_id))
+
+
 @check_access('ckanext_extractor_metadata_delete')
 @validate(schema.metadata_delete)
 def metadata_delete(context, data_dict):
@@ -27,7 +35,9 @@ def metadata_delete(context, data_dict):
     :param string id: The ID or the name of the resource
     """
     log.debug('metadata_delete')
-    # FIXME: Implement this
+    metadata = _get_metadata(data_dict['id'])
+    metadata.delete()
+    metadata.commit()
 
 
 @check_access('ckanext_extractor_metadata_extract')
@@ -66,11 +76,10 @@ def metadata_list(context, data_dict):
     :param int offset: If ``limit`` is given the offset to start
         returning resources from.
 
-    :rtype: List of strings
+    :rtype: List of resource IDs
     """
     log.debug('metadata_list')
-    # FIXME: Implement this
-    return []
+    return [m.resource_id for m in ResourceMetadata.all()]
 
 
 @toolkit.side_effect_free
@@ -85,11 +94,7 @@ def metadata_show(context, data_dict):
     :rtype: dict
     """
     log.debug('metadata_show')
-    try:
-        metadata = ResourceMetadata.one(resource_id=data_dict['id'])
-    except NoResultFound:
-        raise toolkit.ObjectNotFound(
-            "No metadata found for resource '{}'.".format(data_dict['id']))
+    metadata = _get_metadata(data_dict['id'])
     result = metadata.as_dict()
     result['meta'] = dict(metadata.meta)
     return result
