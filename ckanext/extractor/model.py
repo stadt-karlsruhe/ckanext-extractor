@@ -109,7 +109,9 @@ def _setup_resource_metadata_table():
             metadata,
             Column('resource_id', types.UnicodeText, ForeignKey('resource.id',
                    ondelete='CASCADE', onupdate='CASCADE'), nullable=False,
-                   primary_key=True)
+                   primary_key=True),
+            Column('last_extracted', types.DateTime),
+            Column('last_url', types.UnicodeText)
         )
         mapper(
             ResourceMetadata,

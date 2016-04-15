@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import datetime
 import os.path
 import tempfile
 
@@ -22,16 +23,19 @@ from .model import ResourceMetadata, ResourceMetadatum
 def metadata_extract(ini_path, resource, solr_url):
     # FIXME: To avoid re-extracting existing metadata it is probably enough to
     # check whether the resource URL has changed.
+    print('Extract metadata for ' + resource['id'])
     print('Loading config')
     _load_config(ini_path)
-    print('Extract metadata for ' + resource['id'])
-    data = _download_and_extract(resource['url'], solr_url)
     try:
         metadata = ResourceMetadata.one(resource_id=resource['id'])
         print('Replaced existing metadata')
     except NoResultFound:
         metadata = ResourceMetadata.create(resource_id=resource['id'])
         print('Created new metadata')
+    if metadata.last_url == resource['url']:
+        print('Resource URL has not changed, exiting')
+        return metadata
+    data = _download_and_extract(resource['url'], solr_url)
     print('Setting contents')
     metadata.meta.clear()
     metadata.meta['contents'] = data['contents']
@@ -39,8 +43,11 @@ def metadata_extract(ini_path, resource, solr_url):
         key, value = _clean(key, value)
         print('{!r} = {!r}'.format(key, value))
         metadata.meta[key] = value
+    metadata.last_url = resource['url']
+    metadata.last_extracted = datetime.datetime.now()
     print('Saving changes')
     metadata.save()
+    return metadata
 
 
 # Adapted from ckanext-archiver

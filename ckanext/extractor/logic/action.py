@@ -86,9 +86,11 @@ def metadata_show(context, data_dict):
     """
     log.debug('metadata_show')
     try:
-        data = ResourceMetadata.one(resource_id=data_dict['id'])
+        metadata = ResourceMetadata.one(resource_id=data_dict['id'])
     except NoResultFound:
         raise toolkit.ObjectNotFound(
             "No metadata found for resource '{}'.".format(data_dict['id']))
-    return dict(data.meta)
+    result = metadata.as_dict()
+    result['meta'] = dict(metadata.meta)
+    return result
 
