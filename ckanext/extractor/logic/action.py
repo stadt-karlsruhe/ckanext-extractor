@@ -12,7 +12,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from . import schema
 from .helpers import check_access, send_task
-from ..model import ResourceMetadatum
+from ..model import ResourceMetadata, ResourceMetadatum
 
 
 log = logging.getLogger(__name__)
@@ -86,9 +86,9 @@ def metadata_show(context, data_dict):
     """
     log.debug('metadata_show')
     try:
-        datum = ResourceMetadatum.one(resource_id=data_dict['id'])
+        data = ResourceMetadata.one(resource_id=data_dict['id'])
     except NoResultFound:
         raise toolkit.ObjectNotFound(
             "No metadata found for resource '{}'.".format(data_dict['id']))
-    return {datum.key: datum.value}
+    return dict(data.meta)
 

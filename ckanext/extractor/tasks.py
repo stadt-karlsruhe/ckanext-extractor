@@ -15,14 +15,7 @@ from ckan.plugins import toolkit
 import paste.deploy
 from sqlalchemy.orm.exc import NoResultFound
 
-from .model import ResourceMetadatum
-
-
-# Adapted from ckanext-archiver
-def _load_config(ini_path):
-    ini_path = os.path.abspath(ini_path)
-    conf = paste.deploy.appconfig('config:' + ini_path)
-    load_environment(conf.global_conf, conf.local_conf)
+from .model import ResourceMetadata, ResourceMetadatum
 
 
 @celery.task(name='ckanext_extractor.metadata_extract')
@@ -34,14 +27,40 @@ def metadata_extract(ini_path, resource, solr_url):
     print('Extract metadata for ' + resource['id'])
     data = _download_and_extract(resource['url'], solr_url)
     try:
-        datum = ResourceMetadatum.one(resource_id=resource['id'])
-        datum.update(value=data['contents'])
-        print('Replaced existing metadatum')
+        metadata = ResourceMetadata.one(resource_id=resource['id'])
+        print('Replaced existing metadata')
     except NoResultFound:
-        datum = ResourceMetadatum.create(
-            resource_id=resource['id'], key='fulltext', value=data['contents'])
-        print('Created new metadatum')
-    #print('Full text: {}'.format(data['contents']))
+        metadata = ResourceMetadata.create(resource_id=resource['id'])
+        print('Created new metadata')
+    print('Setting contents')
+    metadata.meta.clear()
+    metadata.meta['contents'] = data['contents']
+    for key, value in data['metadata'].iteritems():
+        key, value = _clean(key, value)
+        print('{!r} = {!r}'.format(key, value))
+        metadata.meta[key] = value
+    print('Saving changes')
+    metadata.save()
+
+
+# Adapted from ckanext-archiver
+def _load_config(ini_path):
+    ini_path = os.path.abspath(ini_path)
+    conf = paste.deploy.appconfig('config:' + ini_path)
+    load_environment(conf.global_conf, conf.local_conf)
+
+
+def _clean(key, value):
+    """
+    Clean an extracted metadatum.
+
+    Takes a key/value pair and returns it in cleaned form.
+    """
+    # Flatten 1-element lists
+    if isinstance(value, list) and len(value) == 1:
+        value = value[0]
+    key = key.lower().replace('_', '-')
+    return key, value
 
 
 def _download_and_extract(resource_url, solr_url):

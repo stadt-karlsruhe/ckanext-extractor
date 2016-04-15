@@ -1,73 +1,47 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Data model.
+
+The metadata fields extracted by Solr/Tika vary from one filetype to
+another. Therefore a flexible way of storing a resource's metadata is
+required instead of a fixed set of columns. We achieve this using a
+separate table in which we store both the name and the value of each
+individual metadatum. Using SQLAlchemy's ``association_proxy`` and
+``attribute_mapped_collection`` that table is then accessed in a dict-
+like fashion using the ``ResourceMetadata`` class. This means that you
+will probably never need to use the ``ResourceMetadatum`` class.
+
+In addition to the resource metadata, the class ``ResourceMetadata``
+also stores information about the extraction process.
+"""
+
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 
 from sqlalchemy import Column, ForeignKey, Table, types
+from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.orm import relationship
+from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from ckan.model.domain_object import DomainObject
 from ckan.model.meta import mapper, metadata
-from ckan import model
 
 
 log = logging.getLogger(__name__)
 
-
-# What data do we need to store?
-#
-# - The metadata itself. Each metadata-set is linked to a resource. Since the
-#   extracted metadata-fields vary from one filetype to another we should
-#   probably use a flexible approach here, e.g. a separate row for each
-#   metadata-attribute (id, resource id, attribute name, attribute value). Not
-#   sure how one models something like that in SQLAlchemy.
-#
-# - Metadata about the metadata extraction process. For each resource things
-#   like the task ID (if there's an ongoing extraction task), the hashsum of
-#   the file, HTTP cache information, etc. This is probably a fixed set of
-#   columns, so one row per resource would be OK.
-
-
 resource_metadatum_table = None
 RESOURCE_METADATUM_TABLE_NAME = 'ckanext_extractor_resource_metadatum'
 
+resource_metadata_table = None
+RESOURCE_METADATA_TABLE_NAME = 'ckanext_extractor_resource_metadata'
 
-def setup():
+
+class BaseObject(DomainObject):
     """
-    Set up database structure.
-    """
-    # Gets called from ckanext.extractor.plugin.ExtractorPlugin.configure
-    log.debug('setup')
-    _setup_resource_metadatum_table()
-
-
-def _setup_resource_metadatum_table():
-    global resource_metadatum_table
-
-    if resource_metadatum_table is None:
-        log.debug('Defining resource_metadatum table')
-        resource_metadatum_table = Table(
-            RESOURCE_METADATUM_TABLE_NAME,
-            metadata,
-            Column('resource_id', types.UnicodeText, ForeignKey('resource.id',
-                   ondelete='CASCADE', onupdate='CASCADE'), nullable=False,
-                   primary_key=True),
-            Column('key', types.UnicodeText, nullable=False),
-            Column('value', types.UnicodeText)
-        )
-        mapper(ResourceMetadatum, resource_metadatum_table)
-
-    if not resource_metadatum_table.exists():
-        log.debug('Creating resource_metadatum table')
-        resource_metadatum_table.create()
-    else:
-        log.debug('resource_metadatum table already exists')
-
-
-class ResourceMetadatum(DomainObject):
-    """
-    A single resource metadatum (e.g. `fulltext`) and its value.
+    Base class for data models.
     """
     @classmethod
     def filter_by(cls, **kwargs):
@@ -84,8 +58,78 @@ class ResourceMetadatum(DomainObject):
         cls.Session.commit()
         return instance
 
-    def update(self, **kwargs):
-        for key, value in kwargs.iteritems():
-            setattr(self, key, value)
-        self.save()
+
+# Gets called from ckanext.extractor.plugin.ExtractorPlugin.configure
+def setup():
+    """
+    Set up database structure.
+    """
+    log.debug('setup')
+    _setup_resource_metadata_table()
+    _setup_resource_metadatum_table()
+
+
+def _setup_resource_metadatum_table():
+    global resource_metadatum_table
+    if resource_metadatum_table is None:
+        log.debug('Defining resource_metadatum table')
+        resource_metadatum_table = Table(
+            RESOURCE_METADATUM_TABLE_NAME,
+            metadata,
+            Column('id', types.Integer, nullable=False, primary_key=True),
+            Column('resource_id', types.UnicodeText, ForeignKey(
+                   RESOURCE_METADATA_TABLE_NAME + '.resource_id',
+                   ondelete='CASCADE', onupdate='CASCADE'), nullable=False),
+            Column('key', types.UnicodeText, nullable=False),
+            Column('value', types.UnicodeText)
+        )
+        mapper(ResourceMetadatum, resource_metadatum_table)
+    if not resource_metadatum_table.exists():
+        log.debug('Creating resource_metadatum table')
+        resource_metadatum_table.create()
+    else:
+        log.debug('resource_metadatum table already exists')
+
+
+class ResourceMetadatum(BaseObject):
+    """
+    A single metadatum of a resource (e.g. ``fulltext``) and its value.
+    """
+    def __init__(self, key, value=None):
+        self.key = key
+        self.value = value
+
+
+def _setup_resource_metadata_table():
+    global resource_metadata_table
+    if resource_metadata_table is None:
+        log.debug('Defining resource_metadata table')
+        resource_metadata_table = Table(
+            RESOURCE_METADATA_TABLE_NAME,
+            metadata,
+            Column('resource_id', types.UnicodeText, ForeignKey('resource.id',
+                   ondelete='CASCADE', onupdate='CASCADE'), nullable=False,
+                   primary_key=True)
+        )
+        mapper(
+            ResourceMetadata,
+            resource_metadata_table,
+            properties={
+                '_meta': relationship(ResourceMetadatum, collection_class=
+                                      attribute_mapped_collection('key'),
+                                      cascade='all, delete, delete-orphan'),
+            }
+        )
+    if not resource_metadata_table.exists():
+        log.debug('Creating resource_metadata table')
+        resource_metadata_table.create()
+    else:
+        log.debug('resource_metadate table already exists')
+
+
+class ResourceMetadata(BaseObject):
+    """
+    A resource's metadata and information about their extraction.
+    """
+    meta = association_proxy('_meta', 'value')
 
