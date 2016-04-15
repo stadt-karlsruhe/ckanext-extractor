@@ -4,6 +4,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
+import uuid
 
 import ckan.plugins.toolkit as toolkit
 from ckan.logic import validate
@@ -53,13 +54,52 @@ def metadata_extract(context, data_dict):
 
     :rtype: A dict with the following keys:
 
-        :task_id: The ID of the background task
+        :status: A string describing the state of the metadata. This
+            can be one of the following:
+
+                :new:  if no metadata for the resource existed before
+
+                :update: if metadata existed but is going to be updated
+
+                :unmodified: if metadata existed but won't get updated
+                    (for example because the resource's URL did not
+                    change since the last extraction).
+
+                :inprogress: if a background extraction task for this
+                    resource is already in progress.
+
+        :task_id: The ID of the background task. If ``state`` is ``new``
+            or ``update`` then this is the ID of a newly created task.
+            If ``state`` is ``inprogress`` then it's the ID of the
+            existing task. Otherwise it is ``null``.
+
     """
     log.debug('metadata_extract')
-    res_dict = toolkit.get_action('resource_show')(context, data_dict)
-    result = send_task('metadata_extract', config['__file__'], res_dict,
-                       config['solr_url'])
-    return {'task_id': result.task_id}
+    # Late import at call time because it requires a running app
+    from ckan.lib.celery_app import celery
+    resource = toolkit.get_action('resource_show')(context, data_dict)
+    task_id = None
+    try:
+        metadata = ResourceMetadata.one(resource_id=resource['id'])
+        status = 'update'
+        if metadata.task_id:
+            status = 'inprogress'
+            task_id = metadata.task_id
+        elif metadata.last_url == resource['url']:
+            status = 'unmodified'
+    except NoResultFound:
+        metadata = ResourceMetadata.create(resource_id=resource['id'])
+        status = 'new'
+    if status in ('new', 'update'):
+        task_id = metadata.task_id = str(uuid.uuid4())
+        metadata.save()
+        args = (config['__file__'], resource, config['solr_url'])
+        celery.send_task('ckanext_extractor.metadata_extract', args,
+                         task_id=task_id)
+    return {
+        'status': status,
+        'task_id': task_id,
+    }
 
 
 @toolkit.side_effect_free

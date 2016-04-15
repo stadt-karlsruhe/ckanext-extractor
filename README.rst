@@ -91,7 +91,7 @@ Both of these require some changes to the Solr configuration.
 
 By default, the necessary plugins for text and metadata extration are disabled
 in Solr. To enable them, find your main Solr configuration file (usually
-``/etc/solr/conf/solrconfig.xml``)::
+``/etc/solr/conf/solrconfig.xml``) and add/uncomment the following lines::
 
     <lib dir="../../dist/" regex="apache-solr-cell-\d.*\.jar" />
     <lib dir="../../contrib/extraction/lib" regex=".*\.jar" />
