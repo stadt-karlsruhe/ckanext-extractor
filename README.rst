@@ -28,87 +28,73 @@
     :target: https://pypi.python.org/pypi/ckanext-extractor/
     :alt: License
 
-=============
+
 ckanext-extractor
-=============
+#################
+A CKAN_ extension for automatically extracting text and metadata from datasets.
 
-.. Put a description of your extension here:
-   What does it do? What features does it have?
-   Consider including some screenshots or embedding a video!
+*ckanext-extractor* extracts text and metadata from your datasets' resources
+and adds them to the search index so that they can be used to find your data.
+
+.. _CKAN: https://www.ckan.org
 
 
-------------
 Requirements
-------------
+============
+*ckanext-extractor* has been developed and tested with CKAN 2.5.2. Other
+versions may or may not work, please share your experiences by `creating an
+issue <FIXME>`_.
 
-For example, you might want to mention here which versions of CKAN this
-extension works with.
 
-This extension requires Celery for running background jobs asynchronously.
-Make sure that your Celery daemon is running:
+Installation
+============
+.. note::
+
+    The following steps assume a standard CKAN source installation.
+
+Activate your CKAN virtualenv::
 
     . /usr/lib/ckan/default/bin/activate
+
+Install *ckanext-extractor*::
+
+    pip install ckanext-extractor
+
+Open your CKAN configuration file (e.g. ``/etc/ckan/default/production.ini``)
+and add ``extractor`` to the list of plugins::
+
+    plugins = ... extractor
+
+*ckanext-extractor* uses Celery background tasks to perform the extraction. You
+therefore need to make sure that Celery is running, for example using
+
+::
     paster --plugin=ckan celeryd -c /etc/ckan/default/production.ini
 
+See the `CKAN documentation`_ for more information on Celery.
 
-------------
-Installation
-------------
-
-.. Add any additional install steps to the list below.
-   For example installing any non-Python dependencies or adding any required
-   config settings.
-
-To install ckanext-extractor:
-
-1. Activate your CKAN virtual environment, for example::
-
-     . /usr/lib/ckan/default/bin/activate
-
-2. Install the ckanext-extractor Python package into your virtual environment::
-
-     pip install ckanext-extractor
-
-3. Add ``extractor`` to the ``ckan.plugins`` setting in your CKAN
-   config file (by default the config file is located at
-   ``/etc/ckan/default/production.ini``).
-
-4. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu::
-
-     sudo service apache2 reload
-
-
-
-Solr Configuration
-------------------
-`ckanext-extractor` uses CKAN's Apache Solr instance for two things:
-
-- Extracting text and metadata from resource files
-
-- Indexing the extracted information so that it can be used to find resources
-
-Both of these require some changes to the Solr configuration.
-
-By default, the necessary plugins for text and metadata extration are disabled
-in Solr. To enable them, find your main Solr configuration file (usually
-``/etc/solr/conf/solrconfig.xml``) and add/uncomment the following lines::
+For the actual extraction CKAN's Apache Solr server is used. However, the
+necessary Solr plugins are deactivated by default. To enable them, find your
+main Solr configuration file (usually ``/etc/solr/conf/solrconfig.xml``) and
+add/uncomment the following lines::
 
     <lib dir="../../dist/" regex="apache-solr-cell-\d.*\.jar" />
     <lib dir="../../contrib/extraction/lib" regex=".*\.jar" />
 
 .. note::
 
-  The Solr packages on Ubuntu are broken_ and do not contain the necessary
-  files. You can simply download an `official release`_ of the same version,
-  unpack it to a suitable location (without installing it) and adjust the
-  ``dir`` arguments in the configuration lines above accordingly.
+    The Solr packages on Ubuntu are broken_ and do not contain the necessary
+    files. You can simply download an `official release`_ of the same version,
+    unpack it to a suitable location (without installing it) and adjust the
+    ``dir`` arguments in the configuration lines above accordingly.
 
 .. _broken: https://bugs.launchpad.net/ubuntu/+source/lucene-solr/+bug/1565637
 .. _`official_release`: http://archive.apache.org/dist/lucene/solr
 
 Once the text and metadata have been extracted they need to be added to the
-Solr index. To set up the necessary Solr fields, add the following lines to
-your Solr schema configuration (usually ``/etc/solr/conf/schema.xml``)::
+Solr index, which requires appropriate Solr fields. To set them up add the
+following lines to your Solr schema configuration (usually
+``/etc/solr/conf/schema.xml``)::
 
     # Directly before the line that says "</fields>"
     <dynamicField name="ckanext-extractor_*" type="text" indexed="true" stored="false"/>
@@ -117,26 +103,92 @@ your Solr schema configuration (usually ``/etc/solr/conf/schema.xml``)::
     <copyField source="ckanext-extractor_*" dest="text"/>
 
 Make sure to restart Solr after you have applied the changes. For example, if
-you're using Jetty as an application server for Solr::
+you're using Jetty as an application server for Solr, then
 
+::
     sudo service jetty restart
 
+Finally, restart your CKAN server. For example, if you're using Apache on
+Ubuntu/Debian::
 
----------------
-Config Settings
----------------
+    sudo service apache2 restart
 
-Document any optional config settings here. For example::
+The installation is now complete. To verify that everything is working open the
+URL ``/api/3/action/ckanext_extractor_metadata_list``, e.g. via
 
-    # The minimum number of hours to wait before re-checking a resource
-    # (optional, default: 24).
-    ckanext.extractor.some_setting = some_default_value
+::
+    wget http://localhost/api/3/ckanext_extractor_metadata_list
+
+The output should look like this::
+
+    FIXME
 
 
-------------------------
-Development Installation
-------------------------
+.. _`CKAN_documentation`: http://docs.ckan.org/en/latest/maintaining/background-tasks.html
 
+
+Configuration
+=============
+ckanext-extractor can be configured via the usual CKAN configuration file (e.g.
+``/etc/ckan/default/production.ini``). You must restart your CKAN server after
+updating the configuration.
+
+Formats for Extraction
+----------------------
+While Solr can extract text and metadata from many file formats not all of
+them might be of interest to you. You can therefore configure for which formats
+extraction is performed via the ``ckanext.extractor.index_formats`` option. It
+takes a list of space-separated formats, where the format is the one specified
+in a resource's CKAN metadata (and not the file extension or MIME type)::
+
+    ckanext.extractor.index_formats = pdf txt
+
+Formats are case-insensitive. You can use wildcards (``*`` and ``?``) to match
+multiple formats. To extract data from all formats simply set
+
+::
+    ckanext.extractor.index_formats = *
+
+By default, extraction is only enabled for the PDF format::
+
+    ckanext.extractor.index_formats = pdf
+
+Fields for Indexing
+-------------------
+Once text and metadata have been extracted they can be added to the search
+index. Again, Solr supports more metadata fields than one usually needs. You
+can therefore configure which fields are indexed via the
+``ckanext.extractor.index_fields`` option. It takes a space-separated list of
+field names::
+
+    ckanext.extractor.index_fields = contents author
+
+The fulltext of a document is available via the ``contents`` field. Field names
+are case-insensitive. You can use wildcards (``*`` and ``?``) to match multiple
+field names. To index all fields simply set
+
+::
+    ckanext.extractor.index_fields = *
+
+By default, only the fulltext of a document is indexed::
+
+    ckanext.extractor.index_fields = contents
+
+
+.. note::
+
+    ckanext-extractor normalizes the field names reported by Solr by replacing
+    underscores (``_``) with hyphens (``-``).
+
+
+ToDo
+====
+- Add a way to update the resource's metadata using the extraction results.
+
+
+
+Development
+===========
 To install ckanext-extractor for development, activate your CKAN virtualenv and
 do::
 
@@ -146,11 +198,9 @@ do::
     pip install -r dev-requirements.txt
 
 
------------------
 Running the Tests
------------------
-
-To run the tests, do::
+=================
+To run the tests, activate your CKAN virtualenv and do::
 
     nosetests --nologcapture --with-pylons=test.ini
 
