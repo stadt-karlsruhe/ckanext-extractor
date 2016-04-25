@@ -12,8 +12,9 @@ from pylons import config
 from sqlalchemy.orm.exc import NoResultFound
 
 from . import schema
-from .helpers import check_access, send_task
+from .helpers import check_access
 from ..model import ResourceMetadata, ResourceMetadatum
+from ..config import is_format_indexed
 
 
 log = logging.getLogger(__name__)
@@ -24,7 +25,8 @@ def _get_metadata(resource_id):
         return ResourceMetadata.one(resource_id=resource_id)
     except NoResultFound:
         raise toolkit.ObjectNotFound(
-            "No metadata found for resource '{}'.".format(resource_id))
+            toolkit._("No metadata found for resource '{resource}'.").format(
+            resource=resource_id))
 
 
 @check_access('ckanext_extractor_metadata_delete')
@@ -63,10 +65,13 @@ def metadata_extract(context, data_dict):
 
                 :unmodified: if metadata existed but won't get updated
                     (for example because the resource's URL did not
-                    change since the last extraction).
+                    change since the last extraction)
 
                 :inprogress: if a background extraction task for this
-                    resource is already in progress.
+                    resource is already in progress
+
+                :ignored: if the resource format is configured to be
+                    ignored
 
         :task_id: The ID of the background task. If ``state`` is ``new``
             or ``update`` then this is the ID of a newly created task.
@@ -81,15 +86,24 @@ def metadata_extract(context, data_dict):
     task_id = None
     try:
         metadata = ResourceMetadata.one(resource_id=resource['id'])
-        status = 'update'
         if metadata.task_id:
             status = 'inprogress'
             task_id = metadata.task_id
-        elif metadata.last_url == resource['url']:
+        elif not is_format_indexed(resource['format']):
+            metadata.delete()
+            metadata.commit()
+            status = 'ignore'
+        elif (metadata.last_url != resource['url']
+              or metadata.last_format != resource['format']):
+            status = 'update'
+        else:
             status = 'unmodified'
     except NoResultFound:
-        metadata = ResourceMetadata.create(resource_id=resource['id'])
-        status = 'new'
+        if is_format_indexed(resource['format']):
+            metadata = ResourceMetadata.create(resource_id=resource['id'])
+            status = 'new'
+        else:
+            status = 'ignore'
     if status in ('new', 'update'):
         task_id = metadata.task_id = str(uuid.uuid4())
         metadata.save()

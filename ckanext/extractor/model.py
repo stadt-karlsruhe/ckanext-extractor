@@ -116,6 +116,7 @@ def _setup_resource_metadata_table():
                    primary_key=True),
             Column('last_extracted', types.DateTime),
             Column('last_url', types.UnicodeText),
+            Column('last_format', types.UnicodeText),
             Column('task_id', types.UnicodeText)
         )
         mapper(

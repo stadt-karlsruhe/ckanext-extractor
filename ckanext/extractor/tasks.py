@@ -17,6 +17,7 @@ import paste.deploy
 from sqlalchemy.orm.exc import NoResultFound
 
 from .model import ResourceMetadata, ResourceMetadatum
+from .config import is_field_indexed, is_format_indexed
 
 
 @celery.task(name='ckanext_extractor.metadata_extract')
@@ -28,11 +29,14 @@ def metadata_extract(ini_path, resource, solr_url):
         metadata = ResourceMetadata.create(resource_id=resource['id'])
     data = _download_and_extract(resource['url'], solr_url)
     metadata.meta.clear()
-    metadata.meta['contents'] = data['contents']
-    for key, value in data['metadata'].iteritems():
-        key, value = _clean(key, value)
-        metadata.meta[key] = value
+    if is_format_indexed(resource['format']):
+        data['metadata']['contents'] = data['contents']
+        for key, value in data['metadata'].iteritems():
+            key, value = _clean(key, value)
+            if is_field_indexed(key):
+                metadata.meta[key] = value
     metadata.last_url = resource['url']
+    metadata.last_format = resource['format']
     metadata.last_extracted = datetime.datetime.now()
     metadata.task_id = None
     metadata.save()
