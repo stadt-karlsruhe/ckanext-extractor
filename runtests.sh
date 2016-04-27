@@ -4,5 +4,5 @@
 #
 # Any arguments are forwarded to nosetests.
 
-nosetests --ckan --with-pylons=test.ini ckanext/extractor/tests $@
+nosetests --ckan --with-pylons=test.ini $@
 

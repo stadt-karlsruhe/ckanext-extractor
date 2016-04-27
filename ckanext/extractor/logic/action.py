@@ -39,8 +39,7 @@ def metadata_delete(context, data_dict):
     """
     log.debug('metadata_delete')
     metadata = _get_metadata(data_dict['id'])
-    metadata.delete()
-    metadata.commit()
+    metadata.delete().commit()
 
 
 @check_access('extractor_metadata_extract')
@@ -63,7 +62,7 @@ def metadata_extract(context, data_dict):
 
                 :update: if metadata existed but is going to be updated
 
-                :unmodified: if metadata existed but won't get updated
+                :unchanged: if metadata existed but won't get updated
                     (for example because the resource's URL did not
                     change since the last extraction)
 
@@ -92,18 +91,18 @@ def metadata_extract(context, data_dict):
         elif not is_format_indexed(resource['format']):
             metadata.delete()
             metadata.commit()
-            status = 'ignore'
+            status = 'ignored'
         elif (metadata.last_url != resource['url']
               or metadata.last_format != resource['format']):
             status = 'update'
         else:
-            status = 'unmodified'
+            status = 'unchanged'
     except NoResultFound:
         if is_format_indexed(resource['format']):
             metadata = ResourceMetadata.create(resource_id=resource['id'])
             status = 'new'
         else:
-            status = 'ignore'
+            status = 'ignored'
     if status in ('new', 'update'):
         task_id = metadata.task_id = str(uuid.uuid4())
         metadata.save()
@@ -132,7 +131,7 @@ def metadata_list(context, data_dict):
     :rtype: List of resource IDs
     """
     log.debug('metadata_list')
-    return [m.resource_id for m in ResourceMetadata.all()]
+    return [m.resource_id for m in ResourceMetadata.filter_by(task_id=None)]
 
 
 @toolkit.side_effect_free

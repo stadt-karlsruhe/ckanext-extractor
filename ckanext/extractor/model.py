@@ -62,6 +62,19 @@ class BaseObject(DomainObject):
     def all(cls):
         return cls.Session.query(cls).all()
 
+    def delete(self):
+        super(BaseObject, self).delete()
+        return self
+
+    def update(self, **kwargs):
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+        return self
+
+    def commit(self):
+        super(BaseObject, self).commit()
+        return self
+
 
 # Gets called from ckanext.extractor.plugin.ExtractorPlugin.configure
 def setup():
