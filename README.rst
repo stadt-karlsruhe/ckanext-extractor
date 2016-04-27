@@ -114,10 +114,10 @@ Ubuntu/Debian::
     sudo service apache2 restart
 
 The installation is now complete. To verify that everything is working open the
-URL ``/api/3/action/ckanext_extractor_metadata_list``, e.g. via
+URL ``/api/3/action/extractor_metadata_list``, e.g. via
 
 ::
-    wget http://localhost/api/3/ckanext_extractor_metadata_list
+    wget http://localhost/api/3/extractor_metadata_list
 
 The output should look like this::
 
@@ -137,42 +137,42 @@ Formats for Extraction
 ----------------------
 While Solr can extract text and metadata from many file formats not all of
 them might be of interest to you. You can therefore configure for which formats
-extraction is performed via the ``ckanext.extractor.index_formats`` option. It
+extraction is performed via the ``ckanext.extractor.indexed_formats`` option. It
 takes a list of space-separated formats, where the format is the one specified
 in a resource's CKAN metadata (and not the file extension or MIME type)::
 
-    ckanext.extractor.index_formats = pdf txt
+    ckanext.extractor.indexed_formats = pdf txt
 
 Formats are case-insensitive. You can use wildcards (``*`` and ``?``) to match
 multiple formats. To extract data from all formats simply set
 
 ::
-    ckanext.extractor.index_formats = *
+    ckanext.extractor.indexed_formats = *
 
 By default, extraction is only enabled for the PDF format::
 
-    ckanext.extractor.index_formats = pdf
+    ckanext.extractor.indexed_formats = pdf
 
 Fields for Indexing
 -------------------
 Once text and metadata have been extracted they can be added to the search
 index. Again, Solr supports more metadata fields than one usually needs. You
 can therefore configure which fields are indexed via the
-``ckanext.extractor.index_fields`` option. It takes a space-separated list of
+``ckanext.extractor.indexed_fields`` option. It takes a space-separated list of
 field names::
 
-    ckanext.extractor.index_fields = contents author
+    ckanext.extractor.indexed_fields = contents author
 
 The fulltext of a document is available via the ``contents`` field. Field names
 are case-insensitive. You can use wildcards (``*`` and ``?``) to match multiple
 field names. To index all fields simply set
 
 ::
-    ckanext.extractor.index_fields = *
+    ckanext.extractor.indexed_fields = *
 
 By default, only the fulltext of a document is indexed::
 
-    ckanext.extractor.index_fields = contents
+    ckanext.extractor.indexed_fields = contents
 
 
 .. note::

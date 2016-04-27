@@ -29,7 +29,7 @@ def _get_metadata(resource_id):
             resource=resource_id))
 
 
-@check_access('ckanext_extractor_metadata_delete')
+@check_access('extractor_metadata_delete')
 @validate(schema.metadata_delete)
 def metadata_delete(context, data_dict):
     """
@@ -43,7 +43,7 @@ def metadata_delete(context, data_dict):
     metadata.commit()
 
 
-@check_access('ckanext_extractor_metadata_extract')
+@check_access('extractor_metadata_extract')
 @validate(schema.metadata_extract)
 def metadata_extract(context, data_dict):
     """
@@ -108,8 +108,7 @@ def metadata_extract(context, data_dict):
         task_id = metadata.task_id = str(uuid.uuid4())
         metadata.save()
         args = (config['__file__'], resource, config['solr_url'])
-        celery.send_task('ckanext_extractor.metadata_extract', args,
-                         task_id=task_id)
+        res = celery.send_task('extractor.metadata_extract', args, task_id=task_id)
     return {
         'status': status,
         'task_id': task_id,
@@ -117,7 +116,7 @@ def metadata_extract(context, data_dict):
 
 
 @toolkit.side_effect_free
-@check_access('ckanext_extractor_metadata_list')
+@check_access('extractor_metadata_list')
 @validate(schema.metadata_list)
 def metadata_list(context, data_dict):
     """
@@ -137,7 +136,7 @@ def metadata_list(context, data_dict):
 
 
 @toolkit.side_effect_free
-@check_access('ckanext_extractor_metadata_show')
+@check_access('extractor_metadata_show')
 @validate(schema.metadata_show)
 def metadata_show(context, data_dict):
     """

@@ -8,27 +8,29 @@ import json
 import logging
 
 from ckan import plugins
+from ckan.logic import NotFound
 from ckan.plugins import toolkit
-from ckan.logic import get_action
 
+from .config import is_field_indexed, is_format_indexed
 from .logic import action, auth
 from . import model
 
 
 log = logging.getLogger(__name__)
+get_action = toolkit.get_action
 
 
 SOLR_FIELD = 'ckanext-extractor_{id}_{key}'
 
 
-def _is_package(obj):
+def _is_resource(obj):
     """
-    Check if a dict describes a package.
+    Check if a dict describes a resource.
 
     This is a very simple, duck-typing style test that only checks
-    whether the dict contains an ``owner_org`` entry.
+    whether the dict contains an ``package_id`` entry.
     """
-    return 'owner_org' in obj
+    return 'package_id' in obj
 
 
 class ExtractorPlugin(plugins.SingletonPlugin):
@@ -60,18 +62,18 @@ class ExtractorPlugin(plugins.SingletonPlugin):
     #
 
     def after_create(self, context, obj):
-        if _is_package(obj):
-            log.debug('A package was created: {}'.format(obj['id']))
-        else:
+        if _is_resource(obj):
             log.debug('A resource was created: {}'.format(obj['id']))
-            get_action('ckanext_extractor_metadata_extract')({}, obj)
+            get_action('extractor_metadata_extract')(context, obj)
+        else:
+            log.debug('A package was created: {}'.format(obj['id']))
 
     def after_update(self, context, obj):
-        if _is_package(obj):
-            log.debug('A package was updated: {}'.format(obj['id']))
-        else:
+        if _is_resource(obj):
             log.debug('A resource was updated: {}'.format(obj['id']))
-            get_action('ckanext_extractor_metadata_extract')({}, obj)
+            get_action('extractor_metadata_extract')(context, obj)
+        else:
+            log.debug('A package was updated: {}'.format(obj['id']))
 
     def after_delete(self, context, obj):
         # For IPackageController, obj is a dict, but for IResourceController
@@ -88,16 +90,22 @@ class ExtractorPlugin(plugins.SingletonPlugin):
             # that the index is properly updated in that case.
             for resource in obj:
                 log.debug('A resource was deleted: {}'.format(resource['id']))
-                get_action('ckanext_extractor_metadata_delete')({}, resource)
+                get_action('extractor_metadata_delete')(context, resource)
 
     def before_index(self, pkg_dict):
         log.debug('Package {} will be indexed'.format(pkg_dict['id']))
         data_dict = json.loads(pkg_dict['data_dict'])
         for resource in data_dict['resources']:
-            metadata = get_action('ckanext_extractor_metadata_show')({}, resource)
+            if not is_format_indexed(resource['format']):
+                continue
+            try:
+                metadata = get_action('extractor_metadata_show')({}, resource)
+            except NotFound:
+                continue
             for key, value in metadata['meta'].iteritems():
-                field = SOLR_FIELD.format(id=resource['id'], key=key)
-                pkg_dict[field] = value
+                if is_field_indexed(key):
+                    field = SOLR_FIELD.format(id=resource['id'], key=key)
+                    pkg_dict[field] = value
         return pkg_dict
 
     #
@@ -106,10 +114,10 @@ class ExtractorPlugin(plugins.SingletonPlugin):
 
     def get_actions(self):
         return {
-            'ckanext_extractor_metadata_delete': action.metadata_delete,
-            'ckanext_extractor_metadata_extract': action.metadata_extract,
-            'ckanext_extractor_metadata_list': action.metadata_list,
-            'ckanext_extractor_metadata_show': action.metadata_show,
+            'extractor_metadata_delete': action.metadata_delete,
+            'extractor_metadata_extract': action.metadata_extract,
+            'extractor_metadata_list': action.metadata_list,
+            'extractor_metadata_show': action.metadata_show,
         }
 
     #
@@ -118,10 +126,10 @@ class ExtractorPlugin(plugins.SingletonPlugin):
 
     def get_auth_functions(self):
         return {
-            'ckanext_extractor_metadata_delete': auth.metadata_delete,
-            'ckanext_extractor_metadata_extract': auth.metadata_extract,
-            'ckanext_extractor_metadata_list': auth.metadata_list,
-            'ckanext_extractor_metadata_show': auth.metadata_show,
+            'extractor_metadata_delete': auth.metadata_delete,
+            'extractor_metadata_extract': auth.metadata_extract,
+            'extractor_metadata_list': auth.metadata_list,
+            'extractor_metadata_show': auth.metadata_show,
         }
 
 

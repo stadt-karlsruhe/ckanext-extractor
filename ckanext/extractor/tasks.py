@@ -4,25 +4,22 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import datetime
-import os.path
 import tempfile
 
 import pysolr
 import requests
 
-from ckan.config.environment import load_environment
 from ckan.lib.celery_app import celery
 from ckan.plugins import toolkit
-import paste.deploy
 from sqlalchemy.orm.exc import NoResultFound
 
 from .model import ResourceMetadata, ResourceMetadatum
-from .config import is_field_indexed, is_format_indexed
+from .config import is_field_indexed, is_format_indexed, load_config
 
 
-@celery.task(name='ckanext_extractor.metadata_extract')
+@celery.task(name='extractor.metadata_extract')
 def metadata_extract(ini_path, resource, solr_url):
-    _load_config(ini_path)
+    load_config(ini_path)
     try:
         metadata = ResourceMetadata.one(resource_id=resource['id'])
     except NoResultFound:
@@ -40,13 +37,6 @@ def metadata_extract(ini_path, resource, solr_url):
     metadata.last_extracted = datetime.datetime.now()
     metadata.task_id = None
     metadata.save()
-
-
-# Adapted from ckanext-archiver
-def _load_config(ini_path):
-    ini_path = os.path.abspath(ini_path)
-    conf = paste.deploy.appconfig('config:' + ini_path)
-    load_environment(conf.global_conf, conf.local_conf)
 
 
 def _clean(key, value):
