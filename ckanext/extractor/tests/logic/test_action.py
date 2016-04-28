@@ -12,8 +12,10 @@ from ckan.tests.helpers import call_action, FunctionalTestBase
 from ckan.tests import factories
 
 from ...model import ResourceMetadata
-from ..helpers import (assert_authorized, assert_equal, assert_no_metadata,
-                       assert_not_authorized, get_metadata, fake_process)
+from ..helpers import (assert_anonymous_access, assert_authorized, assert_equal,
+                       assert_no_anonymous_access, assert_no_metadata,
+                       assert_not_authorized, get_metadata, fake_process,
+                       assert_validation_fails)
 
 
 class TestMetadataList(FunctionalTestBase):
@@ -45,6 +47,7 @@ class TestMetadataList(FunctionalTestBase):
         """
         assert_authorized(factories.User(), 'extractor_metadata_list',
                           "Normal user wasn't allowed to metadata_list")
+        assert_anonymous_access('extractor_metadata_list')
 
 
 @mock.patch('ckan.lib.celery_app.celery.send_task')
@@ -159,9 +162,18 @@ class TestMetadataExtract(FunctionalTestBase):
         assert_not_authorized(factories.User(), 'extractor_metadata_extract',
                              'Normal user was allowed to metadata_extract',
                              id=res_dict['id'])
+        assert_no_anonymous_access('extractor_metadata_extract',
+                                   id=res_dict['id'])
         assert_authorized(factories.Sysadmin(), 'extractor_metadata_extract',
                           "Sysadmin wasn't allowed to metadata_extract",
                           id=res_dict['id'])
+
+    def test_metadata_extract_validation(self, send_task):
+        """
+        Input validation for metadata_extract.
+        """
+        assert_validation_fails('extractor_metadata_extract',
+                                'ID was not required.')
 
 
 @mock.patch('ckan.lib.celery_app.celery.send_task')
@@ -209,6 +221,14 @@ class TestMetadataShow(FunctionalTestBase):
         assert_authorized(factories.User(), 'extractor_metadata_show',
                           "Normal user wasn't allowed to metadata_show",
                           id=res_dict['id'])
+        assert_anonymous_access('extractor_metadata_show', id=res_dict['id'])
+
+    def test_metadata_show_validation(self, send_task):
+        """
+        Input validation for metadata_show.
+        """
+        assert_validation_fails('extractor_metadata_show',
+                                'ID was not required.')
 
 
 @mock.patch('ckan.lib.celery_app.celery.send_task')
@@ -239,7 +259,16 @@ class TestMetadataDelete(FunctionalTestBase):
         assert_not_authorized(factories.User(), 'extractor_metadata_delete',
                              'Normal user was allowed to metadata_delete',
                              id=res_dict['id'])
+        assert_no_anonymous_access('extractor_metadata_delete',
+                                   id=res_dict['id'])
         assert_authorized(factories.Sysadmin(), 'extractor_metadata_delete',
                           "Sysadmin wasn't allowed to metadata_delete",
                           id=res_dict['id'])
+
+    def test_metadata_delete_validation(self, send_task):
+        """
+        Input validation for metadata_delete.
+        """
+        assert_validation_fails('extractor_metadata_delete',
+                                'ID was not required.')
 

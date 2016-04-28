@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from nose.tools import assert_raises
 
-from ckan.logic import NotAuthorized
+from ckan.logic import NotAuthorized, ValidationError
 from ckan.tests.helpers import call_action
 
 from ..model import ResourceMetadata, ResourceMetadatum
@@ -91,5 +91,41 @@ def assert_not_authorized(user_dict, action, msg, **kwargs):
         call_action_with_auth(action, context, **kwargs)
     except NotAuthorized:
         return
+    raise AssertionError(msg)
+
+
+def assert_anonymous_access(action, **kwargs):
+    """
+    Assert that an action can be called anonymously.
+    """
+    try:
+        call_action_with_auth(action, **kwargs)
+    except NotAuthorized:
+        raise AssertionError('"{}" cannot be called anonymously.'.format(
+                             action))
+
+
+def assert_no_anonymous_access(action, **kwargs):
+    """
+    Assert that an action cannot be called anonymously.
+    """
+    try:
+        call_action_with_auth(action, **kwargs)
+    except NotAuthorized:
+        return
+    raise AssertionError('"{}" can be called anonymously.'.format(action))
+
+
+def assert_validation_fails(action, msg=None, **kwargs):
+    """
+    Assert that an action call doesn't validate.
+    """
+    try:
+        call_action(action, **kwargs)
+    except ValidationError:
+        return
+    if msg is None:
+        msg = ('Validation succeeded unexpectedly for action "{action}" with '
+               + 'input {input!r}.').format(action=action, input=kwargs)
     raise AssertionError(msg)
 
