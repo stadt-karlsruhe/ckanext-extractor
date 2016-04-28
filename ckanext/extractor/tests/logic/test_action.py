@@ -12,8 +12,8 @@ from ckan.tests.helpers import call_action, FunctionalTestBase
 from ckan.tests import factories
 
 from ...model import ResourceMetadata
-from ..helpers import (assert_equal, assert_no_metadata, get_metadata,
-                       fake_process)
+from ..helpers import (assert_authorized, assert_equal, assert_no_metadata,
+                       assert_not_authorized, get_metadata, fake_process)
 
 
 class TestMetadataList(FunctionalTestBase):
@@ -38,6 +38,13 @@ class TestMetadataList(FunctionalTestBase):
         res_dict = factories.Resource(format='pdf')
         fake_process(res_dict)
         assert_equal(call_action('extractor_metadata_list'), [res_dict['id']])
+
+    def test_metadata_list_auth(self):
+        """
+        Authorization for metadata_show.
+        """
+        assert_authorized(factories.User(), 'extractor_metadata_list',
+                          "Normal user wasn't allowed to metadata_list")
 
 
 @mock.patch('ckan.lib.celery_app.celery.send_task')
@@ -143,4 +150,96 @@ class TestMetadataExtract(FunctionalTestBase):
         assert_raises(
             NotFound, lambda: call_action('extractor_metadata_extract',
             id='does-not-exist'))
+
+    def test_metadata_extract_auth(self, send_task):
+        """
+        Authorization for metadata_extract.
+        """
+        res_dict = factories.Resource(format='pdf')
+        assert_not_authorized(factories.User(), 'extractor_metadata_extract',
+                             'Normal user was allowed to metadata_extract',
+                             id=res_dict['id'])
+        assert_authorized(factories.Sysadmin(), 'extractor_metadata_extract',
+                          "Sysadmin wasn't allowed to metadata_extract",
+                          id=res_dict['id'])
+
+
+@mock.patch('ckan.lib.celery_app.celery.send_task')
+class TestMetadataShow(FunctionalTestBase):
+
+    def test_metadata_show_unexisting(self, send_task):
+        """
+        metadata_show for a resource that does not exist.
+        """
+        assert_raises(
+            NotFound, lambda: call_action('extractor_metadata_show',
+            id='does-not-exist'))
+
+    def test_metadata_show_inprogress(self, send_task):
+        """
+        metadata_show for metadata that is in progress.
+        """
+        res_dict = factories.Resource(format='pdf')
+        task_id = send_task.call_args[1]['task_id']
+        result = call_action('extractor_metadata_show', id=res_dict['id'])
+        assert_equal(result['task_id'], task_id, 'Wrong task ID.')
+
+    def test_metadata_show_normal(self, send_task):
+        """
+        metadata_show for normal metadata.
+        """
+        res_dict = factories.Resource(format='pdf')
+        fake_process(res_dict)
+        metadata = get_metadata(res_dict)
+        metadata.meta['contents'] = 'foobar'
+        metadata.meta['author'] = 'John Doe'
+        metadata.save()
+        result = call_action('extractor_metadata_show', id=res_dict['id'])
+        assert_equal(result['meta']['contents'], 'foobar', 'Wrong contents.')
+        assert_equal(result['meta']['author'], 'John Doe', 'Wrong author.')
+        assert_equal(result['resource_id'], res_dict['id'],
+                     'Wrong resource ID.')
+        assert_true(result['task_id'] is None, 'Unexpected task ID.')
+
+    def test_metadata_show_auth(self, send_task):
+        """
+        Authorization for metadata_show.
+        """
+        res_dict = factories.Resource(format='pdf')
+        assert_authorized(factories.User(), 'extractor_metadata_show',
+                          "Normal user wasn't allowed to metadata_show",
+                          id=res_dict['id'])
+
+
+@mock.patch('ckan.lib.celery_app.celery.send_task')
+class TestMetadataDelete(FunctionalTestBase):
+
+    def test_metadata_delete_unexisting(self, send_task):
+        """
+        metadata_delete for a resource that does not exist.
+        """
+        assert_raises(
+            NotFound, lambda: call_action('extractor_metadata_delete',
+            id='does-not-exist'))
+
+    def test_metadata_delete_normal(self, send_task):
+        """
+        metadata_delete for a normal resource.
+        """
+        res_dict = factories.Resource(format='pdf')
+        fake_process(res_dict)
+        call_action('extractor_metadata_delete', id=res_dict['id'])
+        assert_no_metadata(res_dict)
+
+    def test_metadata_delete_auth(self, send_task):
+        """
+        Authorization for metadata_delete.
+        """
+        res_dict = factories.Resource(format='pdf')
+        assert_not_authorized(factories.User(), 'extractor_metadata_delete',
+                             'Normal user was allowed to metadata_delete',
+                             id=res_dict['id'])
+        assert_authorized(factories.Sysadmin(), 'extractor_metadata_delete',
+                          "Sysadmin wasn't allowed to metadata_delete",
+                          id=res_dict['id'])
 
