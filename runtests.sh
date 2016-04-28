@@ -4,5 +4,10 @@
 #
 # Any arguments are forwarded to nosetests.
 
-nosetests --ckan --with-pylons=test.ini $@
+nosetests --ckan \
+          --with-pylons=test.ini \
+          --with-coverage \
+          --cover-package=ckanext.extractor \
+          --cover-erase \
+          $@
 
