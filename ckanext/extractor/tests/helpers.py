@@ -3,6 +3,14 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import datetime
+import os.path
+from SimpleHTTPServer import SimpleHTTPRequestHandler
+from SocketServer import TCPServer
+from threading import Thread
+
+from celery import current_app
+import mock
 from nose.tools import assert_raises
 
 from ckan.logic import NotAuthorized, ValidationError
@@ -128,4 +136,81 @@ def assert_validation_fails(action, msg=None, **kwargs):
         msg = ('Validation succeeded unexpectedly for action "{action}" with '
                + 'input {input!r}.').format(action=action, input=kwargs)
     raise AssertionError(msg)
+
+
+class AddressReuseServer(TCPServer):
+    allow_reuse_address = True
+
+
+class HTTPRequestHandler(SimpleHTTPRequestHandler):
+    """
+    Serves files from a given directory instead of current directory.
+    """
+    def __init__(self, dir, *args, **kwargs):
+        self.dir = os.path.abspath(dir)
+        SimpleHTTPRequestHandler.__init__(self, *args, **kwargs)
+
+    def translate_path(self, path):
+        return os.path.join(self.dir, path.lstrip('/'))
+
+
+class SimpleServer(Thread):
+    """
+    HTTP server that serves a directory in a separate thread.
+
+    If ``dir`` is not given the current directory is used.
+    """
+    def __init__(self, dir=None, port=8000):
+        super(SimpleServer, self).__init__()
+        if dir is None:
+            dir = os.getcwd()
+
+        def factory(*args, **kwargs):
+            return HTTPRequestHandler(dir, *args, **kwargs)
+
+        self.httpd = AddressReuseServer(("", port), factory)
+
+    def run(self):
+        try:
+            self.httpd.serve_forever()
+        finally:
+            self.httpd.server_close()
+
+    def stop(self):
+        self.httpd.shutdown()
+
+
+def with_eager_send_task(f):
+    """
+    Decorator that patches Celery's ``send_task`` to be eager.
+    """
+    # See https://github.com/celery/celery/issues/581#issuecomment-5687723
+    def mocked(name, args=(), kwargs={}, **opts):
+        task = current_app.tasks[name]
+        return task.apply(args, kwargs, **opts)
+    return mock.patch('ckan.lib.celery_app.celery.send_task', wraps=mocked)
+
+
+def assert_time_span(start, stop=None, min=None, max=None):
+    """
+    Assert validity of a time span.
+
+    ``start`` and ``stop`` are ``datetime.datetime`` instances. If
+    ``stop`` is not given the current date and time is used.
+
+    The length of the time span between ``start`` and ``stopped`` is
+    computed (in seconds). If ``min`` (``max``) is given and larger
+    (smaller) than the time span then an ``AssertionError`` is raised.
+    """
+    if stop is None:
+        stop = datetime.datetime.now()
+    span = (stop - start).total_seconds()
+    if (min is not None) and (min > span):
+        msg = 'Time span {span}s is too small (must be >={min}s).'.format(
+            span=span, min=min)
+        raise AssertionError(msg)
+    if (max is not None) and (max < span):
+        msg = 'Time span {span}s is too large (must be <={max}s).'.format(
+            span=span, max=max)
+        raise AssertionError(max)
 

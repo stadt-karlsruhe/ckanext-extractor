@@ -106,7 +106,7 @@ def metadata_extract(context, data_dict):
     if status in ('new', 'update'):
         task_id = metadata.task_id = str(uuid.uuid4())
         metadata.save()
-        args = (config['__file__'], resource, config['solr_url'])
+        args = (config['__file__'], resource)
         res = celery.send_task('extractor.metadata_extract', args, task_id=task_id)
     return {
         'status': status,
