@@ -107,7 +107,7 @@ def metadata_extract(context, data_dict):
         task_id = metadata.task_id = str(uuid.uuid4())
         metadata.save()
         args = (config['__file__'], resource)
-        res = celery.send_task('extractor.metadata_extract', args, task_id=task_id)
+        celery.send_task('extractor.metadata_extract', args, task_id=task_id)
     return {
         'status': status,
         'task_id': task_id,

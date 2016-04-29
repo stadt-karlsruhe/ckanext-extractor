@@ -1,0 +1,10 @@
+# Example file for local test settings. Copy to `test-local.ini`
+
+# Test Configuration settings for your particular system (e.g. database
+# connection, Solr URL) should go into this file (`test-local.ini`). It
+# is automatically included in `test.ini` and not tracked by Git.
+
+# Include default CKAN test configuration. You may have to update the
+# path if the CKAN sources are not in an adjacent directory.
+use = config:../ckan/test-core.ini
+

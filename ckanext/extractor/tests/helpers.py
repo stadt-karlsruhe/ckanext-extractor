@@ -8,10 +8,11 @@ import os.path
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from SocketServer import TCPServer
 from threading import Thread
+import time
 
 from celery import current_app
 import mock
-from nose.tools import assert_raises
+from nose.tools import assert_raises, assert_true, assert_false
 
 from ckan.logic import NotAuthorized, ValidationError
 from ckan.tests.helpers import call_action
@@ -81,7 +82,7 @@ def assert_authorized(user_dict, action, msg, **kwargs):
 
     Raises an ``AssertionError`` if access was denied.
     """
-    context = {'user': user_dict['id']}
+    context = {'user': user_dict['name']}
     try:
         call_action_with_auth(action, context, **kwargs)
     except NotAuthorized:
@@ -94,7 +95,7 @@ def assert_not_authorized(user_dict, action, msg, **kwargs):
 
     Raises an ``AssertionError`` if access was granted.
     """
-    context = {'user': user_dict['id']}
+    context = {'user': user_dict['name']}
     try:
         call_action_with_auth(action, context, **kwargs)
     except NotAuthorized:
@@ -106,8 +107,9 @@ def assert_anonymous_access(action, **kwargs):
     """
     Assert that an action can be called anonymously.
     """
+    context = {'user': ''}
     try:
-        call_action_with_auth(action, **kwargs)
+        call_action_with_auth(action, context, **kwargs)
     except NotAuthorized:
         raise AssertionError('"{}" cannot be called anonymously.'.format(
                              action))
@@ -117,8 +119,9 @@ def assert_no_anonymous_access(action, **kwargs):
     """
     Assert that an action cannot be called anonymously.
     """
+    context = {'user': ''}
     try:
-        call_action_with_auth(action, **kwargs)
+        call_action_with_auth(action, context, **kwargs)
     except NotAuthorized:
         return
     raise AssertionError('"{}" can be called anonymously.'.format(action))
@@ -180,17 +183,6 @@ class SimpleServer(Thread):
         self.httpd.shutdown()
 
 
-def with_eager_send_task(f):
-    """
-    Decorator that patches Celery's ``send_task`` to be eager.
-    """
-    # See https://github.com/celery/celery/issues/581#issuecomment-5687723
-    def mocked(name, args=(), kwargs={}, **opts):
-        task = current_app.tasks[name]
-        return task.apply(args, kwargs, **opts)
-    return mock.patch('ckan.lib.celery_app.celery.send_task', wraps=mocked)
-
-
 def assert_time_span(start, stop=None, min=None, max=None):
     """
     Assert validity of a time span.
@@ -213,4 +205,26 @@ def assert_time_span(start, stop=None, min=None, max=None):
         msg = 'Time span {span}s is too large (must be <={max}s).'.format(
             span=span, max=max)
         raise AssertionError(max)
+
+
+def is_package_found(query, pkg_id):
+    """
+    Check if a package is found via a query.
+    """
+    result = call_action('package_search', q=query)
+    return any(pkg['id'] == pkg_id for pkg in result['results'])
+
+
+def assert_package_found(query, id, msg=None):
+    """
+    Assert that a package is found via a query.
+    """
+    assert_true(is_package_found(query, id), msg)
+
+
+def assert_package_not_found(query, id, msg=None):
+    """
+    Assert that a package is not found via a query.
+    """
+    assert_false(is_package_found(query, id), msg)
 
