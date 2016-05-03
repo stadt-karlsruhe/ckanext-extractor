@@ -1,13 +1,28 @@
 # -*- coding: utf-8 -*-
-from setuptools import setup, find_packages  # Always prefer setuptools over distutils
-from codecs import open  # To use a consistent encoding
-from os import path
 
-here = path.abspath(path.dirname(__file__))
+from setuptools import setup, find_packages
+import codecs
+import os.path
+import re
 
-# Get the long description from the relevant file
-with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+
+# Get the long description from the README
+with codecs.open(os.path.join(HERE, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
+
+# Extract version
+INIT_PY = os.path.join(HERE, 'ckanext', 'extractor', '__init__.py')
+version = None
+with codecs.open(INIT_PY) as f:
+    for line in f:
+        m = re.match(r'__version__\s*=\s*[\'"](.*)[\'"]', line)
+        if m:
+            version = m.groups()[0]
+            break
+if version is None:
+    raise RuntimeError('Could not extract version from "{}".'.format(INIT_PY))
 
 setup(
     name='''ckanext-extractor''',
@@ -15,9 +30,9 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='0.0.1',
+    version=version,
 
-    description='''A metadata extractor for CKAN''',
+    description='''A fulltext and metadata extractor for CKAN''',
     long_description=long_description,
 
     # The project's main homepage.
