@@ -174,6 +174,58 @@ class TestMetadataExtract(FunctionalTestBase):
         """
         assert_validation_fails('extractor_metadata_extract',
                                 'ID was not required.')
+        assert_validation_fails('extractor_metadata_extract',
+                                'Wrong force type was accepted',
+                                force='maybe')
+
+    def test_metadata_extract_force_ignored_format(self, send_task):
+        """
+        Forcing metadata_extract with ignored format.
+        """
+        res_dict = factories.Resource(format='foo')
+        result = call_action('extractor_metadata_extract', id=res_dict['id'],
+                             force=True)
+        assert_equal(result['status'], 'ignored', 'Wrong state')
+        assert_false(result['task_id'] is None, 'Missing task ID')
+        assert_equal(result['task_id'], get_metadata(res_dict).task_id,
+                     'Task IDs differ.')
+        assert_equal(send_task.call_count, 1,
+                     'Wrong number of extraction tasks.')
+
+    def test_metadata_extract_force_unchanged(self, send_task):
+        """
+        Forcing metadata_extract with unchanged resource.
+        """
+        res_dict = factories.Resource(format='pdf')
+        send_task.reset_mock()
+        fake_process(res_dict)
+        result = call_action('extractor_metadata_extract', id=res_dict['id'],
+                             force=True)
+        assert_equal(result['status'], 'unchanged', 'Wrong state')
+        assert_false(result['task_id'] is None, 'Missing task ID')
+        assert_equal(result['task_id'], get_metadata(res_dict).task_id,
+                     'Task IDs differ.')
+        assert_equal(send_task.call_count, 1,
+                     'Wrong number of extraction tasks.')
+
+    def test_metadata_extract_force_inprogress(self, send_task):
+        """
+        Forcing metadata_extract with existing task.
+        """
+        res_dict = factories.Resource(format='pdf')
+        send_task.reset_mock()
+        old_task_id = get_metadata(res_dict).task_id
+
+        result = call_action('extractor_metadata_extract', id=res_dict['id'],
+                             force=True)
+        assert_equal(result['status'], 'inprogress', 'Wrong state')
+        assert_false(result['task_id'] is None, 'Missing task ID')
+        assert_equal(result['task_id'], get_metadata(res_dict).task_id,
+                     'Task IDs differ.')
+        assert_false(result['task_id'] == old_task_id,
+                     'Task ID was not updated.')
+        assert_equal(send_task.call_count, 1,
+                     'Wrong number of extraction tasks.')
 
 
 @mock.patch('ckan.lib.celery_app.celery.send_task')

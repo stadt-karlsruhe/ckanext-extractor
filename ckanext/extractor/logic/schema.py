@@ -8,6 +8,7 @@ import logging
 
 from ckan.lib.navl.validators import ignore_missing, not_empty
 from ckan.logic.schema import default_pagination_schema
+from ckan.logic.validators import boolean_validator
 
 
 log = logging.getLogger(__name__)
@@ -41,9 +42,11 @@ class _Schema(object):
 class _MandatoryID(_Schema):
     id = [not_empty, unicode]
 
-
 metadata_delete = _MandatoryID
-metadata_extract = _MandatoryID
+
+class metadata_extract(_MandatoryID):
+    force = [ignore_missing, boolean_validator]
+
 metadata_list = default_pagination_schema
 metadata_show = _MandatoryID
 

@@ -53,6 +53,10 @@ def metadata_extract(context, data_dict):
 
     :param string id: The ID or name of the resource
 
+    :param boolean force: Extract metadata even if the resource format
+        is ignored, if the resource hasn't changed, or if an extraction
+        task is already scheduled for the resource (optional).
+
     :rtype: A dict with the following keys:
 
         :status: A string describing the state of the metadata. This
@@ -72,17 +76,25 @@ def metadata_extract(context, data_dict):
                 :ignored: if the resource format is configured to be
                     ignored
 
+            Note that if ``force`` is true then an extraction job will
+            be scheduled regardless of the status reported.
+
         :task_id: The ID of the background task. If ``state`` is ``new``
             or ``update`` then this is the ID of a newly created task.
             If ``state`` is ``inprogress`` then it's the ID of the
             existing task. Otherwise it is ``null``.
 
+            If ``force`` is true then this is the ID of the new
+            extraction task.
+
     """
     log.debug('metadata_extract')
     # Late import at call time because it requires a running app
     from ckan.lib.celery_app import celery
+    force = data_dict.get('force', False)
     resource = toolkit.get_action('resource_show')(context, data_dict)
     task_id = None
+    metadata = None
     try:
         metadata = ResourceMetadata.one(resource_id=resource['id'])
         if metadata.task_id:
@@ -91,6 +103,7 @@ def metadata_extract(context, data_dict):
         elif not is_format_indexed(resource['format']):
             metadata.delete()
             metadata.commit()
+            metadata = None
             status = 'ignored'
         elif (metadata.last_url != resource['url']
               or metadata.last_format != resource['format']):
@@ -99,11 +112,12 @@ def metadata_extract(context, data_dict):
             status = 'unchanged'
     except NoResultFound:
         if is_format_indexed(resource['format']):
-            metadata = ResourceMetadata.create(resource_id=resource['id'])
             status = 'new'
         else:
             status = 'ignored'
-    if status in ('new', 'update'):
+    if status in ('new', 'update') or force:
+        if metadata is None:
+            metadata = ResourceMetadata.create(resource_id=resource['id'])
         task_id = metadata.task_id = str(uuid.uuid4())
         metadata.save()
         args = (config['__file__'], resource)

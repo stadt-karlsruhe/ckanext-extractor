@@ -38,16 +38,18 @@ def metadata_extract(ini_path, res_dict):
         metadata = ResourceMetadata.one(resource_id=res_dict['id'])
     except NoResultFound:
         metadata = ResourceMetadata.create(resource_id=res_dict['id'])
-    extracted = download_and_extract(res_dict['url'])
-    metadata.meta.clear()
-    for key, value in extracted.iteritems():
-        if is_field_indexed(key):
-            metadata.meta[key] = value
-    metadata.last_url = res_dict['url']
-    metadata.last_format = res_dict['format']
-    metadata.last_extracted = datetime.datetime.now()
-    metadata.task_id = None
-    metadata.save()
+    try:
+        metadata.last_url = res_dict['url']
+        metadata.last_format = res_dict['format']
+        metadata.last_extracted = datetime.datetime.now()
+        metadata.meta.clear()
+        extracted = download_and_extract(res_dict['url'])
+        for key, value in extracted.iteritems():
+            if is_field_indexed(key):
+                metadata.meta[key] = value
+    finally:
+        metadata.task_id = None
+        metadata.save()
 
     # We need to update the search index for the package here. Note that
     # we cannot rely on the automatic update that happens when a resource
