@@ -74,11 +74,12 @@ Start Celery Daemon
 therefore need to make sure that Celery is running, for example using
 
 ::
+
     paster --plugin=ckan celeryd -c /etc/ckan/default/production.ini
 
 See the `CKAN documentation`_ for more information on Celery.
 
-.. _`CKAN_documentation`: http://docs.ckan.org/en/latest/maintaining/background-tasks.html
+.. _`CKAN documentation`: http://docs.ckan.org/en/latest/maintaining/background-tasks.html
 
 
 Configure Solr
@@ -99,7 +100,7 @@ add/uncomment the following lines::
     ``dir`` arguments in the configuration lines above accordingly.
 
 .. _broken: https://bugs.launchpad.net/ubuntu/+source/lucene-solr/+bug/1565637
-.. _`official_release`: http://archive.apache.org/dist/lucene/solr
+.. _`official release`: http://archive.apache.org/dist/lucene/solr
 
 Once the text and metadata have been extracted they need to be added to the
 Solr index, which requires appropriate Solr fields. To set them up add the
@@ -116,6 +117,7 @@ Make sure to restart Solr after you have applied the changes. For example, if
 you're using Jetty as an application server for Solr, then
 
 ::
+
     sudo service jetty restart
 
 
@@ -133,6 +135,7 @@ The installation is now complete. To verify that everything is working open the
 URL ``/api/3/action/extractor_metadata_list``, e.g. via
 
 ::
+
     wget -qO - http://localhost/api/3/action/extractor_metadata_list
 
 The output should look like this (in particular, ``success`` should ``true``)::
@@ -142,7 +145,7 @@ The output should look like this (in particular, ``success`` should ``true``)::
 
 Configuration
 =============
-ckanext-extractor can be configured via the usual CKAN configuration file (e.g.
+*ckanext-extractor* can be configured via the usual CKAN configuration file (e.g.
 ``/etc/ckan/default/production.ini``). You must restart your CKAN server after
 updating the configuration.
 
@@ -160,6 +163,7 @@ Formats are case-insensitive. You can use wildcards (``*`` and ``?``) to match
 multiple formats. To extract data from all formats simply set
 
 ::
+
     ckanext.extractor.indexed_formats = *
 
 By default, extraction is only enabled for the PDF format::
@@ -181,17 +185,17 @@ are case-insensitive. You can use wildcards (``*`` and ``?``) to match multiple
 field names. To index all fields simply set
 
 ::
+
     ckanext.extractor.indexed_fields = *
 
 By default, only the fulltext of a document is indexed::
 
     ckanext.extractor.indexed_fields = contents
 
-
 .. note::
 
-    ckanext-extractor normalizes the field names reported by Solr by replacing
-    underscores (``_``) with hyphens (``-``).
+    *ckanext-extractor* normalizes the field names reported by Solr by
+    replacing underscores (``_``) with hyphens (``-``).
 
 
 Paster Commands
@@ -203,14 +207,14 @@ using the paster_ tool.
 
 .. note::
 
-    You have to activate your virtualenv before you can activate these
-    commands:
+    You have to activate your virtualenv before you can use these commands::
 
         . /usr/lib/ckan/default/bin/activate
 
 The general form for a paster command is
 
 ::
+
     paster --plugin=ckanext-extractor COMMAND ARGUMENTS --config=/etc/ckan/default/development.ini
 
 Replace ``COMMAND`` and ``ARGUMENTS`` as described below.
@@ -241,18 +245,91 @@ The following commands are available:
 
 API
 ===
-FIXME
+Metadata can be managed via the standard `CKAN API`_. Unless noted otherwise
+all commands are only available via POST requests to authenticated users.
+
+.. _`CKAN API`: http://docs.ckan.org/en/latest/api/index.html
+
+``extractor_metadata_delete``
+-----------------------------
+Delete metadata.
+
+Only available to administrators.
+
+Parameters:
+
+:id: ID of the resource for which metadata should be deleted.
 
 
-ToDo
-====
-- Add a way to update the resource's metadata using the extraction results.
+``extractor_metadata_extract``
+------------------------------
+Extract metadata.
 
+This function schedules a background task for extracting metadata from a
+resource.
+
+Only available to administrators.
+
+Parameters:
+
+:id: ID of the resource for which metadata should be extracted.
+
+:force: Optional boolean flag to force extraction if the resource format
+    is ignored, if the resource is unchanged, or if an extraction task has
+    already been scheduled for that resource.
+
+Returns a dict with the following entries:
+
+:status: A string describing the state of the metadata. This can be one of the
+    following:
+
+    :new: if no metadata for the resource existed before
+
+    :update: if metadata existed but is going to be updated
+
+    :unchanged: if metadata existed but won't get updated (for example because
+        the resource's URL did not change since the last extraction)
+
+    :inprogress: if a background extraction task for this resource is already
+        in progress
+
+    :ignored: if the resource format is configured to be ignored
+
+    Note that if ``force`` is true then an extraction job will be scheduled
+    regardless of the status reported.
+
+:task_id: The ID of the background task. If ``state`` is ``new`` or ``update``
+    then this is the ID of a newly created task. If ``state`` is ``inprogress``
+    then it's the ID of the existing task. Otherwise it is ``null``.
+
+    If ``force`` is true then this is the ID of the new extraction task.
+
+``extractor_metadata_list``
+---------------------------
+List resources with metadata.
+
+Returns a list with the IDs of all resources for which metadata has been
+extracted.
+
+Available to all (even anonymous) users via GET and POST.
+
+``extractor_metadata_show``
+---------------------------
+Show the metadata for a resource.
+
+Parameters:
+
+:id: ID of the resource for which metadata should be extracted.
+
+Returns a dict with the resource's metadata and information about the last
+extraction.
+
+Available to all (even anonymous) users via GET and POST.
 
 
 Development
 ===========
-To install ckanext-extractor for development, activate your CKAN virtualenv and
+To install *ckanext-extractor* for development, activate your CKAN virtualenv and
 do::
 
     git clone https://github.com/torfsen/ckanext-extractor.git
@@ -267,58 +344,5 @@ To run the tests, activate your CKAN virtualenv and do::
 
     ./runtests.sh
 
+Any additional arguments are passed on to ``nosetests``.
 
----------------------------------
-Registering ckanext-extractor on PyPI
----------------------------------
-
-ckanext-extractor should be availabe on PyPI as
-https://pypi.python.org/pypi/ckanext-extractor. If that link doesn't work, then
-you can register the project on PyPI for the first time by following these
-steps:
-
-1. Create a source distribution of the project::
-
-     python setup.py sdist
-
-2. Register the project::
-
-     python setup.py register
-
-3. Upload the source distribution to PyPI::
-
-     python setup.py sdist upload
-
-4. Tag the first release of the project on GitHub with the version number from
-   the ``setup.py`` file. For example if the version number in ``setup.py`` is
-   0.0.1 then do::
-
-       git tag 0.0.1
-       git push --tags
-
-
-----------------------------------------
-Releasing a New Version of ckanext-extractor
-----------------------------------------
-
-ckanext-extractor is availabe on PyPI as https://pypi.python.org/pypi/ckanext-extractor.
-To publish a new version to PyPI follow these steps:
-
-1. Update the version number in the ``setup.py`` file.
-   See `PEP 440 <http://legacy.python.org/dev/peps/pep-0440/#public-version-identifiers>`_
-   for how to choose version numbers.
-
-2. Create a source distribution of the new version::
-
-     python setup.py sdist
-
-3. Upload the source distribution to PyPI::
-
-     python setup.py sdist upload
-
-4. Tag the new release of the project on GitHub with the version number from
-   the ``setup.py`` file. For example if the version number in ``setup.py`` is
-   0.0.2 then do::
-
-       git tag 0.0.2
-       git push --tags

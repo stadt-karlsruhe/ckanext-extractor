@@ -62,7 +62,7 @@ def metadata_extract(context, data_dict):
         :status: A string describing the state of the metadata. This
             can be one of the following:
 
-                :new:  if no metadata for the resource existed before
+                :new: if no metadata for the resource existed before
 
                 :update: if metadata existed but is going to be updated
 
