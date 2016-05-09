@@ -8,10 +8,12 @@ import os.path
 from string import lower
 
 import paste.deploy
-from pylons import config
+from paste.registry import Registry
+from pylons import config, translator
 
 from ckan.plugins import toolkit
 from ckan.config.environment import load_environment
+from ckan.lib.cli import MockTranslator
 
 
 DEFAULTS = {
@@ -49,6 +51,26 @@ def load_config(ini_path):
     ini_path = os.path.abspath(ini_path)
     conf = paste.deploy.appconfig('config:' + ini_path)
     load_environment(conf.global_conf, conf.local_conf)
+    _register_translator()
+
+
+# Adapted from ckanext-archiver
+def _register_translator():
+    """
+    Register a translator in this thread.
+    """
+    global registry
+    try:
+        registry
+    except NameError:
+        registry = Registry()
+    registry.prepare()
+    global translator_obj
+    try:
+        translator_obj
+    except NameError:
+        translator_obj = MockTranslator()
+    registry.register(translator, translator_obj)
 
 
 def _any_match(s, patterns):
