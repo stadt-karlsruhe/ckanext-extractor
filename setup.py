@@ -101,6 +101,12 @@ setup(
 
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
+
+        [paste.paster_command]
+        delete = ckanext.extractor.paster:DeleteCommand
+        extract = ckanext.extractor.paster:ExtractCommand
+        list = ckanext.extractor.paster:ListCommand
+        show = ckanext.extractor.paster:ShowCommand
     ''',
 
     # If you are changing from the default layout of your extension, you may

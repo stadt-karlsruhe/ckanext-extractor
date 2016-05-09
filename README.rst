@@ -52,6 +52,8 @@ Installation
 
     The following steps assume a standard CKAN source installation.
 
+Install Python Package
+----------------------
 Activate your CKAN virtualenv::
 
     . /usr/lib/ckan/default/bin/activate
@@ -65,6 +67,9 @@ and add ``extractor`` to the list of plugins::
 
     plugins = ... extractor
 
+
+Start Celery Daemon
+-------------------
 *ckanext-extractor* uses Celery background tasks to perform the extraction. You
 therefore need to make sure that Celery is running, for example using
 
@@ -73,6 +78,11 @@ therefore need to make sure that Celery is running, for example using
 
 See the `CKAN documentation`_ for more information on Celery.
 
+.. _`CKAN_documentation`: http://docs.ckan.org/en/latest/maintaining/background-tasks.html
+
+
+Configure Solr
+--------------
 For the actual extraction CKAN's Apache Solr server is used. However, the
 necessary Solr plugins are deactivated by default. To enable them, find your
 main Solr configuration file (usually ``/etc/solr/conf/solrconfig.xml``) and
@@ -108,23 +118,26 @@ you're using Jetty as an application server for Solr, then
 ::
     sudo service jetty restart
 
+
+Restart CKAN
+------------
 Finally, restart your CKAN server. For example, if you're using Apache on
 Ubuntu/Debian::
 
     sudo service apache2 restart
 
+
+Test Installation
+-----------------
 The installation is now complete. To verify that everything is working open the
 URL ``/api/3/action/extractor_metadata_list``, e.g. via
 
 ::
-    wget http://localhost/api/3/extractor_metadata_list
+    wget -qO - http://localhost/api/3/action/extractor_metadata_list
 
-The output should look like this::
+The output should look like this (in particular, ``success`` should ``true``)::
 
-    FIXME
-
-
-.. _`CKAN_documentation`: http://docs.ckan.org/en/latest/maintaining/background-tasks.html
+    {"help": "http://localhost/api/3/action/help_show?name=extractor_metadata_list", "success": true, "result": []}
 
 
 Configuration
@@ -181,6 +194,56 @@ By default, only the fulltext of a document is indexed::
     underscores (``_``) with hyphens (``-``).
 
 
+Paster Commands
+===============
+For administration purposes, metadata can be managed from the command line
+using the paster_ tool.
+
+.. _paster: http://docs.ckan.org/en/latest/maintaining/paster.html
+
+.. note::
+
+    You have to activate your virtualenv before you can activate these
+    commands:
+
+        . /usr/lib/ckan/default/bin/activate
+
+The general form for a paster command is
+
+::
+    paster --plugin=ckanext-extractor COMMAND ARGUMENTS --config=/etc/ckan/default/development.ini
+
+Replace ``COMMAND`` and ``ARGUMENTS`` as described below.
+
+The following commands are available:
+
+:delete (all | ID [ID [...]]): Delete metadata. You can specify one or more
+    resource IDs or a single ``all`` argument (in which case all metadata is
+    deleted).
+
+:extract [--force] (all | ID [ID [...]]): Extract metadata. You can specify one
+    or more resource IDs or a single ``all`` argument (in which case metadata is
+    extracted from all resources with appropriate formats). An optional
+    ``--force`` argument can be used to force extraction if the resource format
+    is ignored, if the resource is unchanged, or if another extraction job
+    already has been scheduled for that resource.
+
+    Note that this command only schedules the necessary extraction background
+    tasks. The Celery daemon has to be running for the extraction to actually
+    happen.
+
+:list: List the IDs of all resources for which metadata has been extracted.
+
+:show (all | ID [ID [...]]): Show extracted metadata. You can specify one or
+    more resource IDs or a single ``all`` argument (in which case all metadata
+    is shown).
+
+
+API
+===
+FIXME
+
+
 ToDo
 ====
 - Add a way to update the resource's metadata using the extraction results.
@@ -202,12 +265,7 @@ Running the Tests
 =================
 To run the tests, activate your CKAN virtualenv and do::
 
-    nosetests --nologcapture --with-pylons=test.ini
-
-To run the tests and produce a coverage report, first make sure you have
-coverage installed in your virtualenv (``pip install coverage``) then run::
-
-    nosetests --nologcapture --with-pylons=test.ini --with-coverage --cover-package=ckanext.extractor --cover-inclusive --cover-erase --cover-tests
+    ./runtests.sh
 
 
 ---------------------------------
