@@ -11,7 +11,7 @@ from nose.tools import assert_false, assert_true
 
 from ckan.tests import factories
 
-from ..tasks import metadata_extract
+from ..tasks import extract
 from .helpers import (assert_equal, assert_time_span, get_metadata,
                       assert_package_found, assert_package_not_found)
 
@@ -38,7 +38,7 @@ class TestMetadataExtractTask(object):
         """
         res_dict = factories.Resource(**RES_DICT)
         get_metadata(res_dict).delete().commit()
-        metadata_extract(config['__file__'], res_dict)
+        extract(config['__file__'], res_dict)
         metadata = get_metadata(res_dict)
         assert_equal(metadata.meta['contents'], METADATA['contents'],
                      'Wrong contents.')
@@ -71,7 +71,7 @@ class TestMetadataExtractTask(object):
         metadata.last_format = 'old format'
         metadata.last_url = 'old url'
         metadata.save()
-        metadata_extract(config['__file__'], res_dict)
+        extract(config['__file__'], res_dict)
         metadata = get_metadata(res_dict)
         assert_equal(metadata.meta['contents'], METADATA['contents'],
                      'Wrong contents.')

@@ -16,8 +16,8 @@ from .model import ResourceMetadata, ResourceMetadatum
 from .lib import download_and_extract
 
 
-@celery.task(name='extractor.metadata_extract')
-def metadata_extract(ini_path, res_dict):
+@celery.task(name='extractor.extract')
+def extract(ini_path, res_dict):
     """
     Download resource, extract and store metadata.
 

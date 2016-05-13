@@ -20,8 +20,8 @@ def _everybody(context, datadict):
     return {'success': True}
 
 
-metadata_delete = _only_sysadmins
-metadata_extract = _only_sysadmins
-metadata_list = _everybody
-metadata_show = _everybody
+extractor_delete = _only_sysadmins
+extractor_extract = _only_sysadmins
+extractor_list = _everybody
+extractor_show = _everybody
 

@@ -65,12 +65,12 @@ class ExtractorPlugin(plugins.SingletonPlugin):
     def after_create(self, context, obj):
         if _is_resource(obj):
             ctx = dict(context, ignore_auth=True)
-            get_action('extractor_metadata_extract')(ctx, obj)
+            get_action('extractor_extract')(ctx, obj)
 
     def after_update(self, context, obj):
         if _is_resource(obj):
             ctx = dict(context, ignore_auth=True)
-            get_action('extractor_metadata_extract')(ctx, obj)
+            get_action('extractor_extract')(ctx, obj)
 
     #
     # IResourceController
@@ -79,7 +79,7 @@ class ExtractorPlugin(plugins.SingletonPlugin):
     def before_delete(self, context, res_dict, res_dicts):
         ctx = dict(context, ignore_auth=True)
         try:
-            get_action('extractor_metadata_delete')(ctx, res_dict)
+            get_action('extractor_delete')(ctx, res_dict)
         except NotFound:
             # Resource didn't have any metadata
             pass
@@ -94,7 +94,7 @@ class ExtractorPlugin(plugins.SingletonPlugin):
             if not is_format_indexed(resource['format']):
                 continue
             try:
-                metadata = get_action('extractor_metadata_show')({}, resource)
+                metadata = get_action('extractor_show')({}, resource)
             except NotFound:
                 continue
             for key, value in metadata['meta'].iteritems():
@@ -109,10 +109,10 @@ class ExtractorPlugin(plugins.SingletonPlugin):
 
     def get_actions(self):
         return {
-            'extractor_metadata_delete': action.metadata_delete,
-            'extractor_metadata_extract': action.metadata_extract,
-            'extractor_metadata_list': action.metadata_list,
-            'extractor_metadata_show': action.metadata_show,
+            'extractor_delete': action.extractor_delete,
+            'extractor_extract': action.extractor_extract,
+            'extractor_list': action.extractor_list,
+            'extractor_show': action.extractor_show,
         }
 
     #
@@ -121,10 +121,10 @@ class ExtractorPlugin(plugins.SingletonPlugin):
 
     def get_auth_functions(self):
         return {
-            'extractor_metadata_delete': auth.metadata_delete,
-            'extractor_metadata_extract': auth.metadata_extract,
-            'extractor_metadata_list': auth.metadata_list,
-            'extractor_metadata_show': auth.metadata_show,
+            'extractor_delete': auth.extractor_delete,
+            'extractor_extract': auth.extractor_extract,
+            'extractor_list': auth.extractor_list,
+            'extractor_show': auth.extractor_show,
         }
 
 

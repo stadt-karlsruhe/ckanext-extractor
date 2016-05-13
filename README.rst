@@ -132,15 +132,15 @@ Ubuntu/Debian::
 Test Installation
 -----------------
 The installation is now complete. To verify that everything is working open the
-URL ``/api/3/action/extractor_metadata_list``, e.g. via
+URL ``/api/3/action/extractor_list``, e.g. via
 
 ::
 
-    wget -qO - http://localhost/api/3/action/extractor_metadata_list
+    wget -qO - http://localhost/api/3/action/extractor_list
 
 The output should look like this (in particular, ``success`` should ``true``)::
 
-    {"help": "http://localhost/api/3/action/help_show?name=extractor_metadata_list", "success": true, "result": []}
+    {"help": "http://localhost/api/3/action/help_show?name=extractor_list", "success": true, "result": []}
 
 
 Configuration
@@ -250,8 +250,8 @@ all commands are only available via POST requests to authenticated users.
 
 .. _`CKAN API`: http://docs.ckan.org/en/latest/api/index.html
 
-``extractor_metadata_delete``
------------------------------
+``extractor_delete``
+--------------------
 Delete metadata.
 
 Only available to administrators.
@@ -261,8 +261,8 @@ Parameters:
 :id: ID of the resource for which metadata should be deleted.
 
 
-``extractor_metadata_extract``
-------------------------------
+``extractor_extract``
+---------------------
 Extract metadata.
 
 This function schedules a background task for extracting metadata from a
@@ -304,8 +304,8 @@ Returns a dict with the following entries:
 
     If ``force`` is true then this is the ID of the new extraction task.
 
-``extractor_metadata_list``
----------------------------
+``extractor_list``
+------------------
 List resources with metadata.
 
 Returns a list with the IDs of all resources for which metadata has been
@@ -313,8 +313,8 @@ extracted.
 
 Available to all (even anonymous) users via GET and POST.
 
-``extractor_metadata_show``
----------------------------
+``extractor_show``
+------------------
 Show the metadata for a resource.
 
 Parameters:

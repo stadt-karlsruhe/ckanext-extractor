@@ -29,22 +29,22 @@ def _get_metadata(resource_id):
             resource=resource_id))
 
 
-@check_access('extractor_metadata_delete')
-@validate(schema.metadata_delete)
-def metadata_delete(context, data_dict):
+@check_access('extractor_delete')
+@validate(schema.extractor_delete)
+def extractor_delete(context, data_dict):
     """
     Delete the metadata for a resource.
 
     :param string id: The ID or the name of the resource
     """
-    log.debug('metadata_delete')
+    log.debug('extractor_delete')
     metadata = _get_metadata(data_dict['id'])
     metadata.delete().commit()
 
 
-@check_access('extractor_metadata_extract')
-@validate(schema.metadata_extract)
-def metadata_extract(context, data_dict):
+@check_access('extractor_extract')
+@validate(schema.extractor_extract)
+def extractor_extract(context, data_dict):
     """
     Extract and store metadata for a resource.
 
@@ -88,7 +88,7 @@ def metadata_extract(context, data_dict):
             extraction task.
 
     """
-    log.debug('metadata_extract')
+    log.debug('extractor_extract')
     # Late import at call time because it requires a running app
     from ckan.lib.celery_app import celery
     force = data_dict.get('force', False)
@@ -121,7 +121,7 @@ def metadata_extract(context, data_dict):
         task_id = metadata.task_id = str(uuid.uuid4())
         metadata.save()
         args = (config['__file__'], resource)
-        celery.send_task('extractor.metadata_extract', args, task_id=task_id)
+        celery.send_task('extractor.extract', args, task_id=task_id)
     return {
         'status': status,
         'task_id': task_id,
@@ -129,9 +129,9 @@ def metadata_extract(context, data_dict):
 
 
 @toolkit.side_effect_free
-@check_access('extractor_metadata_list')
-@validate(schema.metadata_list)
-def metadata_list(context, data_dict):
+@check_access('extractor_list')
+@validate(schema.extractor_list)
+def extractor_list(context, data_dict):
     """
     List the resources for which metadata has been extracted.
 
@@ -144,14 +144,14 @@ def metadata_list(context, data_dict):
 
     :rtype: List of resource IDs
     """
-    log.debug('metadata_list')
+    log.debug('extractor_list')
     return [m.resource_id for m in ResourceMetadata.filter_by(task_id=None)]
 
 
 @toolkit.side_effect_free
-@check_access('extractor_metadata_show')
-@validate(schema.metadata_show)
-def metadata_show(context, data_dict):
+@check_access('extractor_show')
+@validate(schema.extractor_show)
+def extractor_show(context, data_dict):
     """
     Show the stored metadata for a resource.
 
@@ -159,7 +159,7 @@ def metadata_show(context, data_dict):
 
     :rtype: dict
     """
-    log.debug('metadata_show')
+    log.debug('extractor_show')
     metadata = _get_metadata(data_dict['id'])
     result = metadata.as_dict()
     result['meta'] = dict(metadata.meta)

@@ -45,7 +45,7 @@ class ExtractorCommand(CkanCommand):
         if len(self.args) == 1 and self.args[0].lower() == 'all':
             if only_with_metadata:
                 context = {'ignore_auth': True}
-                return sorted(toolkit.get_action('extractor_metadata_list')(
+                return sorted(toolkit.get_action('extractor_list')(
                               context, {}))
             else:
                 from ckan.model import Resource
@@ -67,7 +67,7 @@ class DeleteCommand(ExtractorCommand):
 
     def command(self):
         self._load_config()
-        delete = toolkit.get_action('extractor_metadata_delete')
+        delete = toolkit.get_action('extractor_delete')
         context = {'ignore_auth': True}
         for id in self._get_ids(True):
             print(id)
@@ -100,7 +100,7 @@ class ExtractCommand(ExtractorCommand):
 
     def command(self):
         self._load_config()
-        extract = toolkit.get_action('extractor_metadata_extract')
+        extract = toolkit.get_action('extractor_extract')
         context = {'ignore_auth':  True}
         for id in self._get_ids():
             print(id + ': ', end='')
@@ -123,7 +123,7 @@ class ListCommand(ExtractorCommand):
     def command(self):
         self._load_config()
         context = {'ignore_auth': True}
-        result = toolkit.get_action('extractor_metadata_list')(context, {})
+        result = toolkit.get_action('extractor_list')(context, {})
         print('\n'.join(sorted(result)))
 
 
@@ -140,7 +140,7 @@ class ShowCommand(ExtractorCommand):
 
     def command(self):
         self._load_config()
-        show = toolkit.get_action('extractor_metadata_show')
+        show = toolkit.get_action('extractor_show')
         context = {'ignore_auth': True}
         ids = self._get_ids(True)
         for i, id in enumerate(ids):
@@ -160,5 +160,4 @@ class ShowCommand(ExtractorCommand):
                 print('    {}: {!r}'.format(key, _compress(meta[key])))
             if i < len(ids) - 1:
                 print('')
-
 

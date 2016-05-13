@@ -42,11 +42,11 @@ class _Schema(object):
 class _MandatoryID(_Schema):
     id = [not_empty, unicode]
 
-metadata_delete = _MandatoryID
+extractor_delete = _MandatoryID
 
-class metadata_extract(_MandatoryID):
+class extractor_extract(_MandatoryID):
     force = [ignore_missing, boolean_validator]
 
-metadata_list = default_pagination_schema
-metadata_show = _MandatoryID
+extractor_list = default_pagination_schema
+extractor_show = _MandatoryID
 
