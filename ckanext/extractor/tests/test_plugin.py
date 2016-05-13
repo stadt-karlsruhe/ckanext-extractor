@@ -83,3 +83,10 @@ class TestHooks(helpers.FunctionalTestBase):
                                  'Metadata not removed from index.')
         assert_no_metadata(res_dict)
 
+    def test_resource_deletion_with_no_metadata(self, send_task):
+        """
+        A resource that doesn't have metadata can be removed.
+        """
+        res_dict = factories.Resource(url='foo', format='not-indexed')
+        helpers.call_action('resource_delete', {'ignore_auth': True}, **res_dict)
+

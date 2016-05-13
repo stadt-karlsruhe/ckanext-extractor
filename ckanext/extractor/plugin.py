@@ -78,7 +78,11 @@ class ExtractorPlugin(plugins.SingletonPlugin):
 
     def before_delete(self, context, res_dict, res_dicts):
         ctx = dict(context, ignore_auth=True)
-        get_action('extractor_metadata_delete')(ctx, res_dict)
+        try:
+            get_action('extractor_metadata_delete')(ctx, res_dict)
+        except NotFound:
+            # Resource didn't have any metadata
+            pass
 
     #
     # IPackageController
