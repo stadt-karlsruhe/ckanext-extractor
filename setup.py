@@ -12,6 +12,10 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 with codecs.open(os.path.join(HERE, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+# Load requirements
+with codecs.open(os.path.join(HERE, 'requirements.txt'), encoding='utf8') as f:
+    requirements = f.readlines()
+
 # Extract version
 INIT_PY = os.path.join(HERE, 'ckanext', 'extractor', '__init__.py')
 version = None
@@ -58,13 +62,12 @@ setup(
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
     ],
 
 
     # What does your project relate to?
-    keywords='''CKAN metadata fulltext text search solr index''',
+    keywords='''CKAN metadata extraction fulltext text search solr index''',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
@@ -75,7 +78,7 @@ setup(
     # project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/technical.html#install-requires-vs-requirements-files
-    install_requires=[],
+    install_requires=requirements,
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
