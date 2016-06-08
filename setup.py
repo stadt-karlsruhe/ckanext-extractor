@@ -1,5 +1,21 @@
 # -*- coding: utf-8 -*-
 
+# Copyright (C) 2016 Stadt Karlsruhe (www.karlsruhe.de)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 from setuptools import setup, find_packages
 import codecs
 import os.path
@@ -40,11 +56,11 @@ setup(
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/torfsen/ckanext-extractor',
+    url='https://github.com/stadt-karlsruhe/ckanext-extractor',
 
     # Author details
-    author='''Florian Brucker''',
-    author_email='''mail@florianbrucker.de''',
+    author='''Stadt Karlsruhe''',
+    author_email='''transparenz@karlsruhe.de''',
 
     # Choose your license
     license='AGPL',
