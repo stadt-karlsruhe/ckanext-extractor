@@ -28,10 +28,6 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 with codecs.open(os.path.join(HERE, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-# Load requirements
-with codecs.open(os.path.join(HERE, 'requirements.txt'), encoding='utf8') as f:
-    requirements = f.readlines()
-
 # Extract version
 INIT_PY = os.path.join(HERE, 'ckanext', 'extractor', '__init__.py')
 version = None
@@ -94,7 +90,7 @@ setup(
     # project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/technical.html#install-requires-vs-requirements-files
-    install_requires=requirements,
+    install_requires=[],
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these

@@ -2,12 +2,6 @@
    these badges work. The necessary Travis and Coverage config files have been
    generated for you.
 
-.. image:: https://travis-ci.org/torfsen/ckanext-extractor.svg?branch=master
-    :target: https://travis-ci.org/torfsen/ckanext-extractor
-
-.. image:: https://coveralls.io/repos/torfsen/ckanext-extractor/badge.svg
-  :target: https://coveralls.io/r/torfsen/ckanext-extractor
-
 .. image:: https://pypip.in/download/ckanext-extractor/badge.svg
     :target: https://pypi.python.org/pypi//ckanext-extractor/
     :alt: Downloads
@@ -43,7 +37,9 @@ Requirements
 ============
 *ckanext-extractor* has been developed and tested with CKAN 2.5.2. Other
 versions may or may not work, please share your experiences by `creating an
-issue <FIXME>`_.
+issue`_.
+
+.. _creating an issue: https://github.com/stadt-karlsruhe/ckanext-extractor/issues
 
 
 Installation
@@ -60,7 +56,11 @@ Activate your CKAN virtualenv::
 
 Install *ckanext-extractor*::
 
-    pip install ckanext-extractor
+    pip install -e ckanext-extractor
+
+Install its dependencies::
+
+    pip install -r /usr/lib/ckan/default/src/ckanext-extractor/pip-requirements.txt
 
 Open your CKAN configuration file (e.g. ``/etc/ckan/default/production.ini``)
 and add ``extractor`` to the list of plugins::
@@ -332,14 +332,14 @@ Development
 To install *ckanext-extractor* for development, activate your CKAN virtualenv and
 do::
 
-    git clone https://github.com/torfsen/ckanext-extractor.git
+    git clone https://github.com/stadt-karlsruhe/ckanext-extractor.git
     cd ckanext-extractor
     python setup.py develop
     pip install -r dev-requirements.txt
 
 
 Running the Tests
-=================
+-----------------
 To run the tests, activate your CKAN virtualenv and do::
 
     ./runtests.sh
