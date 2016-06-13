@@ -54,13 +54,11 @@ Activate your CKAN virtualenv::
 
     . /usr/lib/ckan/default/bin/activate
 
-Install *ckanext-extractor*::
+Install *ckanext-extractor* and its dependencies::
 
+    cd /usr/lib/ckan/default
     pip install -e ckanext-extractor
-
-Install its dependencies::
-
-    pip install -r /usr/lib/ckan/default/src/ckanext-extractor/pip-requirements.txt
+    pip install -r src/ckanext-extractor/pip-requirements.txt
 
 
 Configure CKAN
@@ -68,7 +66,7 @@ Configure CKAN
 Open your CKAN configuration file (e.g. ``/etc/ckan/default/production.ini``)
 and add ``extractor`` to the list of plugins::
 
-    plugins = ... extractor
+    ckan.plugins = ... extractor
 
 Initialize the database::
 
@@ -85,6 +83,7 @@ therefore need to make sure that Celery is running, for example using
     paster --plugin=ckan celeryd -c /etc/ckan/default/production.ini
 
 See the `CKAN documentation`_ for more information on Celery.
+
 
 .. _`CKAN documentation`: http://docs.ckan.org/en/latest/maintaining/background-tasks.html
 
@@ -130,8 +129,7 @@ you're using Jetty as an application server for Solr, then
 
 Restart CKAN
 ------------
-Finally, restart your CKAN server. For example, if you're using Apache on
-Ubuntu/Debian::
+Finally, restart your CKAN server::
 
     sudo service apache2 restart
 
@@ -187,7 +185,7 @@ field names::
 
     ckanext.extractor.indexed_fields = fulltext author
 
-The fulltext of a document is available via the ``fulltext`` field. Field names
+The full text of a document is available via the ``fulltext`` field. Field names
 are case-insensitive. You can use wildcards (``*`` and ``?``) to match multiple
 field names. To index all fields simply set
 
@@ -195,7 +193,7 @@ field names. To index all fields simply set
 
     ckanext.extractor.indexed_fields = *
 
-By default, only the fulltext of a document is indexed::
+By default, only the full text of a document is indexed::
 
     ckanext.extractor.indexed_fields = fulltext
 
@@ -222,9 +220,11 @@ The general form for a paster command is
 
 ::
 
-    paster --plugin=ckanext-extractor COMMAND ARGUMENTS --config=/etc/ckan/default/development.ini
+    paster --plugin=ckanext-extractor COMMAND ARGUMENTS --config=/etc/ckan/default/production.ini
 
-Replace ``COMMAND`` and ``ARGUMENTS`` as described below.
+Replace ``COMMAND`` and ``ARGUMENTS`` as described below. For example::
+
+    paster --plugin=ckanext-extractor extract all --config=/etc/ckan/default/production.ini
 
 The following commands are available:
 
@@ -243,7 +243,7 @@ The following commands are available:
     tasks. The Celery daemon has to be running for the extraction to actually
     happen.
 
-:init Initialize the database tables for *ckanext-extractor*. You only need to
+:init: Initialize the database tables for *ckanext-extractor*. You only need to
     use this once (during the installation).
 
 :list: List the IDs of all resources for which metadata has been extracted.
@@ -339,9 +339,10 @@ Available to all (even anonymous) users via GET and POST.
 
 Development
 ===========
-To install *ckanext-extractor* for development, activate your CKAN virtualenv and
-do::
 
+::
+
+    . /usr/lib/ckan/default/bin/activate
     git clone https://github.com/stadt-karlsruhe/ckanext-extractor.git
     cd ckanext-extractor
     python setup.py develop
