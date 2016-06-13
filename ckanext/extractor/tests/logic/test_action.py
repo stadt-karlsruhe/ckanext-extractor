@@ -200,10 +200,8 @@ class TestExtractorExtract(FunctionalTestBase):
         result = call_action('extractor_extract', id=res_dict['id'],
                              force=True)
         assert_equal(result['status'], 'ignored', 'Wrong state')
-        assert_false(result['task_id'] is None, 'Missing task ID')
-        assert_equal(result['task_id'], get_metadata(res_dict).task_id,
-                     'Task IDs differ.')
-        assert_equal(send_task.call_count, 1,
+        assert_true(result['task_id'] is None, 'Unexpected task ID')
+        assert_equal(send_task.call_count, 0,
                      'Wrong number of extraction tasks.')
 
     def test_extractor_extract_force_unchanged(self, send_task):

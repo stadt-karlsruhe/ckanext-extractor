@@ -97,8 +97,8 @@ class ExtractCommand(ExtractorCommand):
     extract [--force] (all | ID [ID [...]])
 
     If --force is given then extraction is performed even if the
-    resource format is ignored, the resource hasn't changed, or
-    another extraction task for the resource is already in progress.
+    the resource hasn't changed or another extraction task for the
+    resource is already in progress.
 
     Note that Celery must be running, this command only schedules the
     necessary background tasks.

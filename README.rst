@@ -27,8 +27,8 @@ ckanext-extractor
 #################
 A CKAN_ extension for automatically extracting text and metadata from datasets.
 
-*ckanext-extractor* extracts text and metadata from your datasets' resources
-and adds them to the search index so that they can be used to find your data.
+*ckanext-extractor* extracts text and metadata from your resources and adds
+them to the search index so that they can be used to find your data.
 
 .. _CKAN: https://www.ckan.org
 
@@ -235,9 +235,9 @@ The following commands are available:
 :extract [--force] (all | ID [ID [...]]): Extract metadata. You can specify one
     or more resource IDs or a single ``all`` argument (in which case metadata is
     extracted from all resources with appropriate formats). An optional
-    ``--force`` argument can be used to force extraction if the resource format
-    is ignored, if the resource is unchanged, or if another extraction job
-    already has been scheduled for that resource.
+    ``--force`` argument can be used to force extraction even if the resource is
+    unchanged, or if another extraction job already has been scheduled for that
+    resource.
 
     Note that this command only schedules the necessary extraction background
     tasks. The Celery daemon has to be running for the extraction to actually
@@ -284,9 +284,9 @@ Parameters:
 
 :id: ID of the resource for which metadata should be extracted.
 
-:force: Optional boolean flag to force extraction if the resource format
-    is ignored, if the resource is unchanged, or if an extraction task has
-    already been scheduled for that resource.
+:force: Optional boolean flag to force extraction even if the resource is
+    unchanged, or if an extraction task has already been scheduled for that
+    resource.
 
 Returns a dict with the following entries:
 
@@ -306,7 +306,7 @@ Returns a dict with the following entries:
     :ignored: if the resource format is configured to be ignored
 
     Note that if ``force`` is true then an extraction job will be scheduled
-    regardless of the status reported.
+    regardless of the status reported, unless that state is ``ignored``.
 
 :task_id: The ID of the background task. If ``state`` is ``new`` or ``update``
     then this is the ID of a newly created task. If ``state`` is ``inprogress``

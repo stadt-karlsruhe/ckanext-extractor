@@ -69,9 +69,9 @@ def extractor_extract(context, data_dict):
 
     :param string id: The ID or name of the resource
 
-    :param boolean force: Extract metadata even if the resource format
-        is ignored, if the resource hasn't changed, or if an extraction
-        task is already scheduled for the resource (optional).
+    :param boolean force: Extract metadata even if the resource hasn't
+        changed, or if an extraction task is already scheduled for the
+        resource (optional).
 
     :rtype: A dict with the following keys:
 
@@ -93,7 +93,8 @@ def extractor_extract(context, data_dict):
                     ignored
 
             Note that if ``force`` is true then an extraction job will
-            be scheduled regardless of the status reported.
+            be scheduled regardless of the status reported, unless that
+            status is ``ignored``.
 
         :task_id: The ID of the background task. If ``state`` is ``new``
             or ``update`` then this is the ID of a newly created task.
@@ -131,7 +132,7 @@ def extractor_extract(context, data_dict):
             status = 'new'
         else:
             status = 'ignored'
-    if status in ('new', 'update') or force:
+    if status in ('new', 'update') or (status != 'ignored' and force):
         if metadata is None:
             metadata = ResourceMetadata.create(resource_id=resource['id'])
         task_id = metadata.task_id = str(uuid.uuid4())
