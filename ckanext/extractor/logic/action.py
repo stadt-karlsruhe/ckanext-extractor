@@ -53,7 +53,7 @@ def extractor_delete(context, data_dict):
 
     :param string id: The ID or the name of the resource
     """
-    log.debug('extractor_delete')
+    log.debug('extractor_delete {}'.format(data_dict['id']))
     metadata = _get_metadata(data_dict['id'])
     metadata.delete().commit()
 
@@ -104,7 +104,7 @@ def extractor_extract(context, data_dict):
             extraction task.
 
     """
-    log.debug('extractor_extract')
+    log.debug('extractor_extract {}'.format(data_dict['id']))
     # Late import at call time because it requires a running app
     from ckan.lib.celery_app import celery
     force = data_dict.get('force', False)
@@ -175,7 +175,7 @@ def extractor_show(context, data_dict):
 
     :rtype: dict
     """
-    log.debug('extractor_show')
+    log.debug('extractor_show {}'.format(data_dict['id']))
     metadata = _get_metadata(data_dict['id'])
     result = metadata.as_dict()
     result['meta'] = dict(metadata.meta)
