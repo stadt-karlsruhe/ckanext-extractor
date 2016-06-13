@@ -38,7 +38,7 @@ RES_DICT =  {
 }
 
 METADATA =  {
-    'contents': 'foobar',
+    'fulltext': 'foobar',
     'author': 'john_doe',
     'created': 'yesterday',
 }
@@ -56,8 +56,8 @@ class TestMetadataExtractTask(object):
         get_metadata(res_dict).delete().commit()
         extract(config['__file__'], res_dict)
         metadata = get_metadata(res_dict)
-        assert_equal(metadata.meta['contents'], METADATA['contents'],
-                     'Wrong contents.')
+        assert_equal(metadata.meta['fulltext'], METADATA['fulltext'],
+                     'Wrong fulltext.')
         assert_equal(metadata.meta['author'], METADATA['author'],
                      'Wrong author.')
         assert_false('created' in metadata.meta,
@@ -67,7 +67,7 @@ class TestMetadataExtractTask(object):
         assert_equal(metadata.last_url, res_dict['url'], 'Wrong last_url.')
         assert_true(metadata.task_id is None, 'Unexpected task ID.')
         assert_time_span(metadata.last_extracted, max=5)
-        assert_package_found(METADATA['contents'], res_dict['package_id'],
+        assert_package_found(METADATA['fulltext'], res_dict['package_id'],
                              'Metadata not indexed.')
         assert_package_found(METADATA['author'], res_dict['package_id'],
                              'Metadata not indexed.')
@@ -80,7 +80,7 @@ class TestMetadataExtractTask(object):
         """
         res_dict = factories.Resource(**RES_DICT)
         metadata = get_metadata(res_dict)
-        metadata.meta['contents'] = 'old contents'
+        metadata.meta['fulltext'] = 'old fulltext'
         metadata.meta['author'] = 'old author'
         metadata.meta['updated'] = 'should be removed'
         metadata.meta['last_extracted'] = datetime.datetime(2000, 1, 1)
@@ -89,8 +89,8 @@ class TestMetadataExtractTask(object):
         metadata.save()
         extract(config['__file__'], res_dict)
         metadata = get_metadata(res_dict)
-        assert_equal(metadata.meta['contents'], METADATA['contents'],
-                     'Wrong contents.')
+        assert_equal(metadata.meta['fulltext'], METADATA['fulltext'],
+                     'Wrong fulltext.')
         assert_equal(metadata.meta['author'], METADATA['author'],
                      'Wrong author.')
         assert_false('created' in metadata.meta,
@@ -102,7 +102,7 @@ class TestMetadataExtractTask(object):
         assert_equal(metadata.last_url, res_dict['url'], 'Wrong last_url.')
         assert_true(metadata.task_id is None, 'Unexpected task ID.')
         assert_time_span(metadata.last_extracted, max=5)
-        assert_package_found(METADATA['contents'], res_dict['package_id'],
+        assert_package_found(METADATA['fulltext'], res_dict['package_id'],
                              'Metadata not indexed.')
         assert_package_found(METADATA['author'], res_dict['package_id'],
                              'Metadata not indexed.')

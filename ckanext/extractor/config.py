@@ -34,7 +34,7 @@ from ckan.lib.cli import MockTranslator
 
 DEFAULTS = {
     'ckanext.extractor.indexed_formats': 'pdf',
-    'ckanext.extractor.indexed_fields': 'contents',
+    'ckanext.extractor.indexed_fields': 'fulltext',
 }
 
 TRANSFORMATIONS = {

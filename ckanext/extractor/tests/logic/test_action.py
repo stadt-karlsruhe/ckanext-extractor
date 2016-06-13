@@ -269,11 +269,11 @@ class TestExtractorShow(FunctionalTestBase):
         res_dict = factories.Resource(format='pdf')
         fake_process(res_dict)
         metadata = get_metadata(res_dict)
-        metadata.meta['contents'] = 'foobar'
+        metadata.meta['fulltext'] = 'foobar'
         metadata.meta['author'] = 'John Doe'
         metadata.save()
         result = call_action('extractor_show', id=res_dict['id'])
-        assert_equal(result['meta']['contents'], 'foobar', 'Wrong contents.')
+        assert_equal(result['meta']['fulltext'], 'foobar', 'Wrong fulltext.')
         assert_equal(result['meta']['author'], 'John Doe', 'Wrong author.')
         assert_equal(result['resource_id'], res_dict['id'],
                      'Wrong resource ID.')

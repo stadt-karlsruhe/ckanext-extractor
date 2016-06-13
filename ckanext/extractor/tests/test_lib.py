@@ -43,7 +43,7 @@ class TestDownloadAndExtract(object):
     def test_download_and_extract(self):
         pdf_url = 'http://localhost:{port}/test.pdf'.format(port=self.PORT)
         metadata = download_and_extract(pdf_url)
-        assert_true('Foobarium' in metadata['contents'], 'Incorrect contents.')
+        assert_true('Foobarium' in metadata['fulltext'], 'Incorrect fulltext.')
         assert_equal(metadata['content-type'], 'application/pdf')
 
 

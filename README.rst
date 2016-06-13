@@ -178,9 +178,9 @@ can therefore configure which fields are indexed via the
 ``ckanext.extractor.indexed_fields`` option. It takes a space-separated list of
 field names::
 
-    ckanext.extractor.indexed_fields = contents author
+    ckanext.extractor.indexed_fields = fulltext author
 
-The fulltext of a document is available via the ``contents`` field. Field names
+The fulltext of a document is available via the ``fulltext`` field. Field names
 are case-insensitive. You can use wildcards (``*`` and ``?``) to match multiple
 field names. To index all fields simply set
 
@@ -190,7 +190,7 @@ field names. To index all fields simply set
 
 By default, only the fulltext of a document is indexed::
 
-    ckanext.extractor.indexed_fields = contents
+    ckanext.extractor.indexed_fields = fulltext
 
 .. note::
 

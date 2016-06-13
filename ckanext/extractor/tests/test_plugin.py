@@ -40,7 +40,7 @@ RES_DICT =  {
 }
 
 METADATA =  {
-    'contents': 'foobar',
+    'fulltext': 'foobar',
     'author': 'john_doe',
     'created': 'yesterday',
 }
@@ -88,12 +88,12 @@ class TestHooks(helpers.FunctionalTestBase):
         Metadata is removed when a resource is deleted.
         """
         res_dict = factories.Resource(**RES_DICT)
-        assert_package_found(METADATA['contents'], res_dict['package_id'],
+        assert_package_found(METADATA['fulltext'], res_dict['package_id'],
                              'Metadata not added to index.')
         assert_package_found(METADATA['author'], res_dict['package_id'],
                              'Metadata not added to index.')
         helpers.call_action('resource_delete', {'ignore_auth': True}, **res_dict)
-        assert_package_not_found(METADATA['contents'], res_dict['package_id'],
+        assert_package_not_found(METADATA['fulltext'], res_dict['package_id'],
                                  'Metadata not removed from index.')
         assert_package_not_found(METADATA['author'], res_dict['package_id'],
                                  'Metadata not removed from index.')
