@@ -62,10 +62,17 @@ Install its dependencies::
 
     pip install -r /usr/lib/ckan/default/src/ckanext-extractor/pip-requirements.txt
 
+
+Configure CKAN
+--------------
 Open your CKAN configuration file (e.g. ``/etc/ckan/default/production.ini``)
 and add ``extractor`` to the list of plugins::
 
     plugins = ... extractor
+
+Initialize the database::
+
+    paster --plugin=ckanext-extractor init -c /etc/ckan/default/production.ini
 
 
 Start Celery Daemon
@@ -235,6 +242,9 @@ The following commands are available:
     Note that this command only schedules the necessary extraction background
     tasks. The Celery daemon has to be running for the extraction to actually
     happen.
+
+:init Initialize the database tables for *ckanext-extractor*. You only need to
+    use this once (during the installation).
 
 :list: List the IDs of all resources for which metadata has been extracted.
 

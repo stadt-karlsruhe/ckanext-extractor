@@ -79,48 +79,13 @@ class BaseObject(DomainObject):
         return self
 
 
-# Gets called from ckanext.extractor.plugin.ExtractorPlugin.configure
 def setup():
     """
-    Set up database structure.
+    Set up ORM.
+
+    Does not create any database tables, see :py:func:`create_tables`
+    for that.
     """
-    log.debug('setup')
-    _setup_resource_metadata_table()
-    _setup_resource_metadatum_table()
-
-
-def _setup_resource_metadatum_table():
-    global resource_metadatum_table
-    if resource_metadatum_table is None:
-        log.debug('Defining resource_metadatum table')
-        resource_metadatum_table = Table(
-            RESOURCE_METADATUM_TABLE_NAME,
-            metadata,
-            Column('id', types.Integer, nullable=False, primary_key=True),
-            Column('resource_id', types.UnicodeText, ForeignKey(
-                   RESOURCE_METADATA_TABLE_NAME + '.resource_id',
-                   ondelete='CASCADE', onupdate='CASCADE'), nullable=False),
-            Column('key', types.UnicodeText, nullable=False),
-            Column('value', types.UnicodeText)
-        )
-        mapper(ResourceMetadatum, resource_metadatum_table)
-    if not resource_metadatum_table.exists():
-        log.debug('Creating resource_metadatum table')
-        resource_metadatum_table.create()
-    else:
-        log.debug('resource_metadatum table already exists')
-
-
-class ResourceMetadatum(BaseObject):
-    """
-    A single metadatum of a resource (e.g. ``fulltext``) and its value.
-    """
-    def __init__(self, key, value=None):
-        self.key = key
-        self.value = value
-
-
-def _setup_resource_metadata_table():
     global resource_metadata_table
     if resource_metadata_table is None:
         log.debug('Defining resource_metadata table')
@@ -144,11 +109,46 @@ def _setup_resource_metadata_table():
                                       cascade='all, delete, delete-orphan'),
             }
         )
+    global resource_metadatum_table
+    if resource_metadatum_table is None:
+        log.debug('Defining resource_metadatum table')
+        resource_metadatum_table = Table(
+            RESOURCE_METADATUM_TABLE_NAME,
+            metadata,
+            Column('id', types.Integer, nullable=False, primary_key=True),
+            Column('resource_id', types.UnicodeText, ForeignKey(
+                   RESOURCE_METADATA_TABLE_NAME + '.resource_id',
+                   ondelete='CASCADE', onupdate='CASCADE'), nullable=False),
+            Column('key', types.UnicodeText, nullable=False),
+            Column('value', types.UnicodeText)
+        )
+        mapper(ResourceMetadatum, resource_metadatum_table)
+
+
+def create_tables():
+    """
+    Create database tables.
+    """
+    setup()
     if not resource_metadata_table.exists():
-        log.debug('Creating resource_metadata table')
+        log.info('Creating resource_metadata table')
         resource_metadata_table.create()
     else:
-        log.debug('resource_metadate table already exists')
+        log.info('resource_metadate table already exists')
+    if not resource_metadatum_table.exists():
+        log.info('Creating resource_metadatum table')
+        resource_metadatum_table.create()
+    else:
+        log.info('resource_metadatum table already exists')
+
+
+class ResourceMetadatum(BaseObject):
+    """
+    A single metadatum of a resource (e.g. ``fulltext``) and its value.
+    """
+    def __init__(self, key, value=None):
+        self.key = key
+        self.value = value
 
 
 class ResourceMetadata(BaseObject):

@@ -27,7 +27,7 @@ from ckan.lib.cli import CkanCommand
 from ckan.plugins import toolkit
 from ckan.logic import NotFound
 
-from .model import ResourceMetadata
+from .model import create_tables, ResourceMetadata
 
 
 def _error(msg):
@@ -125,6 +125,20 @@ class ExtractCommand(ExtractorCommand):
             if result['task_id']:
                 status += ' (task {})'.format(result['task_id'])
             print(status)
+
+
+class InitCommand(ExtractorCommand):
+    """
+    Initialize database tables.
+    """
+    max_args = 0
+    min_args = 0
+    usage = __doc__
+    summary = __doc__.strip().split('\n')[0]
+
+    def command(self):
+        self._load_config()
+        create_tables()
 
 
 class ListCommand(ExtractorCommand):
