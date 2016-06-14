@@ -45,9 +45,7 @@ issue`_.
 
 Installation
 ============
-.. note::
-
-    The following steps assume a standard CKAN source installation.
+**Note:** The following steps assume a standard CKAN source installation.
 
 Install Python Package
 ----------------------
@@ -100,15 +98,12 @@ add/uncomment the following lines::
     <lib dir="../../dist/" regex="apache-solr-cell-\d.*\.jar" />
     <lib dir="../../contrib/extraction/lib" regex=".*\.jar" />
 
-.. note::
-
-    The Solr packages on Ubuntu are broken_ and do not contain the necessary
-    files. You can simply download an `official release`_ of the same version,
-    unpack it to a suitable location (without installing it) and adjust the
-    ``dir`` arguments in the configuration lines above accordingly.
-
-    For example, if you have unpacked the files to ``/var/lib/apache-solr``,
-    then you would need to put the following lines into ``solrconfig.xml``::
+**Note:** The Solr packages on Ubuntu are broken_ and do not contain the
+necessary files. You can simply download an `official release`_ of the same
+version, unpack it to a suitable location (without installing it) and adjust
+the ``dir`` arguments in the configuration lines above accordingly. For
+example, if you have unpacked the files to ``/var/lib/apache-solr``, then you
+would need to put the following lines into ``solrconfig.xml``::
 
         <lib dir="/var/lib/apache-solr/dist/" regex="apache-solr-cell-\d.*\.jar" />
         <lib dir="/var/lib/apache-solr/contrib/extraction/lib" regex=".*\.jar" />
@@ -160,7 +155,7 @@ You're Done!
 ------------
 Your installation of *ckanext-extractor* is now complete, and new/updated
 resources will have their metadata automatically indexed. You may want to
-adapt the configuration to your needs - see below for details. Once that is
+adapt the configuration to your needs, see below for details. Once that is
 done you may also want to extract metadata from your existing resources::
 
     . /usr/lib/ckan/default/bin/activate
@@ -219,10 +214,8 @@ By default, only the full text of a document is indexed::
 
     ckanext.extractor.indexed_fields = fulltext
 
-.. note::
-
-    *ckanext-extractor* normalizes the field names reported by Solr by
-    replacing underscores (``_``) with hyphens (``-``).
+**Note:** *ckanext-extractor* normalizes the field names reported by Solr by
+replacing underscores (``_``) with hyphens (``-``).
 
 
 Paster Commands
@@ -250,31 +243,31 @@ Replace ``COMMAND`` and ``ARGUMENTS`` as described below. For example::
 
     paster --plugin=ckanext-extractor extract all --config=/etc/ckan/default/production.ini
 
-The following commands are available:
 
-:delete (all | ID [ID [...]]): Delete metadata. You can specify one or more
-    resource IDs or a single ``all`` argument (in which case all metadata is
-    deleted).
+- ``delete (all | ID [ID [...]])``: Delete metadata. You can specify one or
+  more resource IDs or a single ``all`` argument (in which case all metadata is
+  deleted).
 
-:extract [--force] (all | ID [ID [...]]): Extract metadata. You can specify one
-    or more resource IDs or a single ``all`` argument (in which case metadata is
-    extracted from all resources with appropriate formats). An optional
-    ``--force`` argument can be used to force extraction even if the resource is
-    unchanged, or if another extraction job already has been scheduled for that
-    resource.
+- ``extract [--force] (all | ID [ID [...]])``: Extract metadata. You can
+  specify one or more resource IDs or a single ``all`` argument (in which case
+  metadata is extracted from all resources with appropriate formats). An
+  optional ``--force`` argument can be used to force extraction even if the
+  resource is unchanged, or if another extraction job already has been
+  scheduled for that resource.
 
-    Note that this command only schedules the necessary extraction background
-    tasks. The Celery daemon has to be running for the extraction to actually
-    happen.
+  Note that this command only schedules the necessary extraction background
+  tasks. The Celery daemon has to be running for the extraction to actually
+  happen.
 
-:init: Initialize the database tables for *ckanext-extractor*. You only need to
-    use this once (during the installation).
+- ``init``: Initialize the database tables for *ckanext-extractor*. You only
+  need to use this once (during the installation).
 
-:list: List the IDs of all resources for which metadata has been extracted.
+- ``list``: List the IDs of all resources for which metadata has been
+  extracted.
 
-:show (all | ID [ID [...]]): Show extracted metadata. You can specify one or
-    more resource IDs or a single ``all`` argument (in which case all metadata
-    is shown).
+- ``show (all | ID [ID [...]])``: Show extracted metadata. You can specify one
+  or more resource IDs or a single ``all`` argument (in which case all metadata
+  is shown).
 
 
 API
