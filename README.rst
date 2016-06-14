@@ -76,8 +76,9 @@ Initialize the database::
 
 Start Celery Daemon
 -------------------
-*ckanext-extractor* uses Celery background tasks to perform the extraction. You
-therefore need to make sure that Celery is running, for example using
+*ckanext-extractor* uses Celery background tasks to perform the extraction
+asynchronously so that they do not block the web server. You therefore need to
+make sure that Celery is running, for example using
 
 ::
 
@@ -105,6 +106,12 @@ add/uncomment the following lines::
     files. You can simply download an `official release`_ of the same version,
     unpack it to a suitable location (without installing it) and adjust the
     ``dir`` arguments in the configuration lines above accordingly.
+
+    For example, if you have unpacked the files to ``/var/lib/apache-solr``,
+    then you would need to put the following lines into ``solrconfig.xml``::
+
+        <lib dir="/var/lib/apache-solr/dist/" regex="apache-solr-cell-\d.*\.jar" />
+        <lib dir="/var/lib/apache-solr/contrib/extraction/lib" regex=".*\.jar" />
 
 .. _broken: https://bugs.launchpad.net/ubuntu/+source/lucene-solr/+bug/1565637
 .. _`official release`: http://archive.apache.org/dist/lucene/solr
@@ -135,8 +142,8 @@ Finally, restart your CKAN server::
     sudo service apache2 restart
 
 
-Test Installation
------------------
+Test your Installation
+----------------------
 The installation is now complete. To verify that everything is working open the
 URL ``/api/3/action/extractor_list``, e.g. via
 
@@ -147,6 +154,20 @@ URL ``/api/3/action/extractor_list``, e.g. via
 The output should look like this (in particular, ``success`` should ``true``)::
 
     {"help": "http://localhost/api/3/action/help_show?name=extractor_list", "success": true, "result": []}
+
+
+You're Done!
+------------
+Your installation of *ckanext-extractor* is now complete, and new/updated
+resources will have their metadata automatically indexed. You may want to
+adapt the configuration to your needs - see below for details. Once that is
+done you may also want to extract metadata from your existing resources::
+
+    . /usr/lib/ckan/default/bin/activate
+    paster --plugin=ckanext-extractor extract all -c /etc/ckan/default/production.ini
+
+This and other ``paster`` administration commands are explained below in more
+detail.
 
 
 Configuration
