@@ -1,28 +1,3 @@
-.. You should enable this project on travis-ci.org and coveralls.io to make
-   these badges work. The necessary Travis and Coverage config files have been
-   generated for you.
-
-.. image:: https://pypip.in/download/ckanext-extractor/badge.svg
-    :target: https://pypi.python.org/pypi//ckanext-extractor/
-    :alt: Downloads
-
-.. image:: https://pypip.in/version/ckanext-extractor/badge.svg
-    :target: https://pypi.python.org/pypi/ckanext-extractor/
-    :alt: Latest Version
-
-.. image:: https://pypip.in/py_versions/ckanext-extractor/badge.svg
-    :target: https://pypi.python.org/pypi/ckanext-extractor/
-    :alt: Supported Python versions
-
-.. image:: https://pypip.in/status/ckanext-extractor/badge.svg
-    :target: https://pypi.python.org/pypi/ckanext-extractor/
-    :alt: Development Status
-
-.. image:: https://pypip.in/license/ckanext-extractor/badge.svg
-    :target: https://pypi.python.org/pypi/ckanext-extractor/
-    :alt: License
-
-
 ckanext-extractor
 #################
 A CKAN_ extension for automatically extracting text and metadata from datasets.
@@ -56,7 +31,7 @@ Activate your CKAN virtualenv::
 Install *ckanext-extractor* and its dependencies::
 
     cd /usr/lib/ckan/default
-    pip install -e ckanext-extractor
+    pip install -e git+https://github.com/stadt-karlsruhe/ckanext-extractor#egg=ckanext-extractor
     pip install -r src/ckanext-extractor/requirements.txt
 
 
