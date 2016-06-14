@@ -381,3 +381,11 @@ To run the tests, activate your CKAN virtualenv and do::
 
 Any additional arguments are passed on to ``nosetests``.
 
+
+License
+=======
+Copyright (C) 2016 Stadt Karlsruhe (www.karlsruhe.de)
+
+Distributed under the GNU Affero General Public License. See the file
+``LICENSE`` for details.
+
