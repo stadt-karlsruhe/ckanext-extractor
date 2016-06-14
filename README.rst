@@ -27,8 +27,9 @@ ckanext-extractor
 #################
 A CKAN_ extension for automatically extracting text and metadata from datasets.
 
-*ckanext-extractor* extracts text and metadata from your resources and adds
-them to the search index so that they can be used to find your data.
+*ckanext-extractor* automatically extracts text and metadata from your
+resources and adds them to the search index so that they can be used to find
+your data.
 
 .. _CKAN: https://www.ckan.org
 
@@ -58,7 +59,7 @@ Install *ckanext-extractor* and its dependencies::
 
     cd /usr/lib/ckan/default
     pip install -e ckanext-extractor
-    pip install -r src/ckanext-extractor/pip-requirements.txt
+    pip install -r src/ckanext-extractor/requirements.txt
 
 
 Configure CKAN
@@ -205,8 +206,10 @@ By default, only the full text of a document is indexed::
 
 Paster Commands
 ===============
-For administration purposes, metadata can be managed from the command line
-using the paster_ tool.
+In general, *ckanext-extractor* works automatically: whenever a new resource is
+created or an existing resource changes, its metadata is extracted and indexed.
+However, for administration purposes, metadata can also be managed from the
+command line using the paster_ tool.
 
 .. _paster: http://docs.ckan.org/en/latest/maintaining/paster.html
 
