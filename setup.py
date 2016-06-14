@@ -79,7 +79,8 @@ setup(
 
 
     # What does your project relate to?
-    keywords='''CKAN metadata extraction fulltext text search solr index''',
+    keywords='''CKAN metadata meta data extraction fulltext full text search
+                solr tika index''',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
