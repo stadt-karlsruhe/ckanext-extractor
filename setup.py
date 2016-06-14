@@ -48,7 +48,7 @@ setup(
     # http://packaging.python.org/en/latest/tutorial.html#version
     version=version,
 
-    description='''A fulltext and metadata extractor for CKAN''',
+    description='''A full text and metadata extractor for CKAN''',
     long_description=long_description,
 
     # The project's main homepage.
