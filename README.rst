@@ -1,5 +1,9 @@
 ckanext-extractor
 #################
+
+.. image:: https://travis-ci.org/stadt-karlsruhe/ckanext-extractor.svg?branch=master
+    :target: https://travis-ci.org/stadt-karlsruhe/ckanext-extractor
+
 A CKAN_ extension for automatically extracting text and metadata from datasets.
 
 *ckanext-extractor* automatically extracts text and metadata from your
