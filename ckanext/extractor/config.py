@@ -20,6 +20,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from fnmatch import fnmatch
+import logging.config
 import os.path
 from string import lower
 
@@ -65,6 +66,7 @@ def load_config(ini_path):
     Load CKAN configuration.
     """
     ini_path = os.path.abspath(ini_path)
+    logging.config.fileConfig(ini_path, disable_existing_loggers=False)
     conf = paste.deploy.appconfig('config:' + ini_path)
     load_environment(conf.global_conf, conf.local_conf)
     _register_translator()

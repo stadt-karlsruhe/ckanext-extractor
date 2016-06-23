@@ -24,10 +24,10 @@ import sys
 from sqlalchemy import inspect
 
 from ckan.lib.cli import CkanCommand
-from ckan.plugins import toolkit
-from ckan.logic import NotFound
 
-from .model import create_tables, ResourceMetadata
+# Do not import modules for CKAN or ckanext-extractor here (unless you know
+# what you're doing), since their loggers won't work if imported before the
+# CKAN configuration has been loaded.
 
 
 def _error(msg):
@@ -55,14 +55,13 @@ class ExtractorCommand(CkanCommand):
         If ``only_with_metadata`` is true and ``all`` was passed then only
         IDs of resources which have metadata are returned.
         """
+        from ckan.plugins import toolkit
         if len(self.args) < 1:
             _error('Missing argument. Specify one or more resource IDs '
                    + 'or "all".')
         if len(self.args) == 1 and self.args[0].lower() == 'all':
             if only_with_metadata:
-                context = {'ignore_auth': True}
-                return sorted(toolkit.get_action('extractor_list')(
-                              context, {}))
+                return sorted(toolkit.get_action('extractor_list')({}, {}))
             else:
                 from ckan.model import Resource
                 return sorted(r.id for r in Resource.active())
@@ -83,11 +82,11 @@ class DeleteCommand(ExtractorCommand):
 
     def command(self):
         self._load_config()
+        from ckan.plugins import toolkit
         delete = toolkit.get_action('extractor_delete')
-        context = {'ignore_auth': True}
         for id in self._get_ids(True):
             print(id)
-            delete(context, {'id': id})
+            delete({}, {'id': id})
 
 
 class ExtractCommand(ExtractorCommand):
@@ -116,11 +115,11 @@ class ExtractCommand(ExtractorCommand):
 
     def command(self):
         self._load_config()
+        from ckan.plugins import toolkit
         extract = toolkit.get_action('extractor_extract')
-        context = {'ignore_auth':  True}
         for id in self._get_ids():
             print(id + ': ', end='')
-            result = extract(context, {'id': id, 'force': self.options.force})
+            result = extract({}, {'id': id, 'force': self.options.force})
             status = result['status']
             if result['task_id']:
                 status += ' (task {})'.format(result['task_id'])
@@ -138,6 +137,7 @@ class InitCommand(ExtractorCommand):
 
     def command(self):
         self._load_config()
+        from .model import create_tables
         create_tables()
 
 
@@ -152,8 +152,8 @@ class ListCommand(ExtractorCommand):
 
     def command(self):
         self._load_config()
-        context = {'ignore_auth': True}
-        result = toolkit.get_action('extractor_list')(context, {})
+        from ckan.plugins import toolkit
+        result = toolkit.get_action('extractor_list')({}, {})
         print('\n'.join(sorted(result)))
 
 
@@ -170,12 +170,13 @@ class ShowCommand(ExtractorCommand):
 
     def command(self):
         self._load_config()
+        from ckan.plugins import toolkit
+        from ckan.logic import NotFound
         show = toolkit.get_action('extractor_show')
-        context = {'ignore_auth': True}
         ids = self._get_ids(True)
         for i, id in enumerate(ids):
             try:
-                result = show(context, {'id': id})
+                result = show({}, {'id': id})
             except NotFound as e:
                 print(e)
                 continue

@@ -88,7 +88,7 @@ def setup():
     """
     global resource_metadata_table
     if resource_metadata_table is None:
-        log.debug('Defining resource_metadata table')
+        log.debug('Defining resource metadata table')
         resource_metadata_table = Table(
             RESOURCE_METADATA_TABLE_NAME,
             metadata,
@@ -109,9 +109,11 @@ def setup():
                                       cascade='all, delete, delete-orphan'),
             }
         )
+    else:
+        log.debug('Resource metadata table already defined')
     global resource_metadatum_table
     if resource_metadatum_table is None:
-        log.debug('Defining resource_metadatum table')
+        log.debug('Defining resource metadatum table')
         resource_metadatum_table = Table(
             RESOURCE_METADATUM_TABLE_NAME,
             metadata,
@@ -123,6 +125,8 @@ def setup():
             Column('value', types.UnicodeText)
         )
         mapper(ResourceMetadatum, resource_metadatum_table)
+    else:
+        log.debug('Resource metadatum table already defined')
 
 
 def create_tables():
@@ -131,15 +135,15 @@ def create_tables():
     """
     setup()
     if not resource_metadata_table.exists():
-        log.info('Creating resource_metadata table')
+        log.info('Creating resource metadata table')
         resource_metadata_table.create()
     else:
-        log.info('resource_metadate table already exists')
+        log.info('Resource metadate table already exists')
     if not resource_metadatum_table.exists():
-        log.info('Creating resource_metadatum table')
+        log.info('Creating resource metadatum table')
         resource_metadatum_table.create()
     else:
-        log.info('resource_metadatum table already exists')
+        log.info('Resource metadatum table already exists')
 
 
 class ResourceMetadatum(BaseObject):
