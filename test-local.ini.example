@@ -4,6 +4,7 @@
 # connection, Solr URL) should go into this file (`test-local.ini`). It
 # is automatically included in `test.ini` and not tracked by Git.
 
+[app:main]
 # Include default CKAN test configuration. You may have to update the
 # path if the CKAN sources are not in an adjacent directory.
 use = config:../ckan/test-core.ini
