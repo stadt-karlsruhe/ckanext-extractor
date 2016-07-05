@@ -84,8 +84,8 @@ the ``dir`` arguments in the configuration lines above accordingly. For
 example, if you have unpacked the files to ``/var/lib/apache-solr``, then you
 would need to put the following lines into ``solrconfig.xml``::
 
-        <lib dir="/var/lib/apache-solr/dist/" regex="apache-solr-cell-\d.*\.jar" />
-        <lib dir="/var/lib/apache-solr/contrib/extraction/lib" regex=".*\.jar" />
+    <lib dir="/var/lib/apache-solr/dist/" regex="apache-solr-cell-\d.*\.jar" />
+    <lib dir="/var/lib/apache-solr/contrib/extraction/lib" regex=".*\.jar" />
 
 .. _broken: https://bugs.launchpad.net/ubuntu/+source/lucene-solr/+bug/1565637
 .. _`official release`: http://archive.apache.org/dist/lucene/solr
@@ -206,11 +206,10 @@ command line using the paster_ tool.
 
 .. _paster: http://docs.ckan.org/en/latest/maintaining/paster.html
 
-.. note::
+**Note:** You have to activate your virtualenv before you can use these
+commands::
 
-    You have to activate your virtualenv before you can use these commands::
-
-        . /usr/lib/ckan/default/bin/activate
+    . /usr/lib/ckan/default/bin/activate
 
 The general form for a paster command is
 
