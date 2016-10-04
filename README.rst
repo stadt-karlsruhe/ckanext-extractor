@@ -332,6 +332,32 @@ extraction.
 Available to all (even anonymous) users via GET and POST.
 
 
+Postprocessing Extraction Results
+=================================
+The ``ckanext.extractor.interfaces.IExtractorPostprocessor`` interface can be
+used to hook into the extraction process. It allows you to postprocess
+extraction results and to automatically trigger actions that use the extraction
+results for other purposes.
+
+The interface offers 3 hooks:
+
+- ``extractor_after_extract(resource_dict, extracted)`` is called right after
+  the extraction before the extracted metadata ``extracted`` is filtered and
+  stored. You can modify ``extracted`` (in-place) and the changes will end up
+  in the database.
+
+- ``extractor_after_save(resource_dict, metadata_dict)`` is called after the
+  metadata has been filtered and stored in the database but before it is
+  indexed. ``metadata_dict`` is a dict-representation of a
+  ``ckanext.extractor.model.ResourceMetadata`` instance and contains both the
+  extracted metadata and information about the extraction process
+  (meta-metadata, so to speak).
+
+- ``extractor_after_index(resource_dict, metadata_dict)`` is called at the very
+  end of the extraction process, after the metadata has been extracted,
+  filtered, stored and indexed.
+
+
 Development
 ===========
 

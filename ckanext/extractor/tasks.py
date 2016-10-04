@@ -24,12 +24,13 @@ import tempfile
 
 from ckan.lib.search import index_for
 from ckan.lib.celery_app import celery
-from ckan.plugins import toolkit
+from ckan.plugins import PluginImplementations, toolkit
 from sqlalchemy.orm.exc import NoResultFound
 
 from .config import is_field_indexed, load_config
 from .model import ResourceMetadata, ResourceMetadatum
 from .lib import download_and_extract
+from .interfaces import IExtractorPostprocessor
 
 
 @celery.task(name='extractor.extract')
@@ -60,12 +61,17 @@ def extract(ini_path, res_dict):
         metadata.last_extracted = datetime.datetime.now()
         metadata.meta.clear()
         extracted = download_and_extract(res_dict['url'])
+        for plugin in PluginImplementations(IExtractorPostprocessor):
+            plugin.extractor_after_extract(res_dict, extracted)
         for key, value in extracted.iteritems():
             if is_field_indexed(key):
                 metadata.meta[key] = value
     finally:
         metadata.task_id = None
         metadata.save()
+
+    for plugin in PluginImplementations(IExtractorPostprocessor):
+        plugin.extractor_after_save(res_dict, metadata.as_dict())
 
     # We need to update the search index for the package here. Note that
     # we cannot rely on the automatic update that happens when a resource
@@ -74,4 +80,7 @@ def extract(ini_path, res_dict):
     pkg_dict = toolkit.get_action('package_show')(
             {}, {'id': res_dict['package_id']})
     index_for('package').update_dict(pkg_dict)
+
+    for plugin in PluginImplementations(IExtractorPostprocessor):
+        plugin.extractor_after_index(res_dict, metadata.as_dict())
 

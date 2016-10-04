@@ -138,7 +138,7 @@ def create_tables():
         log.info('Creating resource metadata table')
         resource_metadata_table.create()
     else:
-        log.info('Resource metadate table already exists')
+        log.info('Resource metadata table already exists')
     if not resource_metadatum_table.exists():
         log.info('Creating resource metadatum table')
         resource_metadatum_table.create()
@@ -160,4 +160,10 @@ class ResourceMetadata(BaseObject):
     A resource's metadata and information about their extraction.
     """
     meta = association_proxy('_meta', 'value')
+
+    def as_dict(self):
+        d = super(ResourceMetadata, self).as_dict()
+        # DomainObject.as_dict doesn't include association proxies
+        d['meta'] = dict(self.meta)
+        return d
 
