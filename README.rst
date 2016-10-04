@@ -32,12 +32,19 @@ Activate your CKAN virtualenv::
 
     . /usr/lib/ckan/default/bin/activate
 
-Install *ckanext-extractor* and its dependencies::
+Install the latest development version of *ckanext-extractor* and its
+dependencies::
 
     cd /usr/lib/ckan/default
     pip install -e git+https://github.com/stadt-karlsruhe/ckanext-extractor#egg=ckanext-extractor
     pip install -r src/ckanext-extractor/requirements.txt
 
+On a production system you'll probably want to pin a certain `release version`_
+of *ckanext-extractor* instead::
+
+    pip install -e git+https://github.com/stadt-karlsruhe/ckanext-extractor@v0.1.0#egg=ckanext-extractor
+
+.. _release version: https://github.com/stadt-karlsruhe/ckanext-extractor/releases
 
 Configure CKAN
 --------------
