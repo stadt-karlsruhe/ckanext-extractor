@@ -150,16 +150,12 @@ def extractor_extract(context, data_dict):
 @validate(schema.extractor_list)
 def extractor_list(context, data_dict):
     """
-    List the resources for which metadata has been extracted.
+    List resources that have metadata.
 
-    :param int limit: If given, the list of datasets will be broken into
-        pages of at most ``limit`` datasets per page and only one page
-        will be returned at a time (optional).
+    Returns a list with the IDs of the resources which have metadata
+    associated with them.
 
-    :param int offset: If ``limit`` is given the offset to start
-        returning resources from.
-
-    :rtype: List of resource IDs
+    :rtype: list
     """
     log.debug('extractor_list')
     return [m.resource_id for m in ResourceMetadata.filter_by(task_id=None)]
