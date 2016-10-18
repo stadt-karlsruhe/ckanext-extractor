@@ -393,3 +393,17 @@ Copyright (C) 2016 Stadt Karlsruhe (www.karlsruhe.de)
 Distributed under the GNU Affero General Public License. See the file
 ``LICENSE`` for details.
 
+
+Changes
+=======
+
+0.2.0
+-----
+* Added ``IExtractorPostprocessor`` interface for postprocessing extraction
+  results
+* Fixed logging problems in ``paster`` commands
+
+0.1.0
+-----
+* First release
+
