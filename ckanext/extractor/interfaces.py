@@ -81,3 +81,21 @@ class IExtractorPostprocessor(plugins.Interface):
         according to ``ckanext.extractor.indexed_fields``.
         '''
 
+
+class IExtractorRequest(plugins.Interface):
+    '''
+    Plugin into the requests made to download content for extraction.
+
+    The hooks provide a possibility to change the parameters of the request,
+    e.g. if the remote server requires certain headers or authorization tokens
+    or to completly alter the URL.
+
+    '''
+    def extractor_before_request(self, request):
+        '''
+        Change the PreparedRequest object according to your needs
+
+        See the requests documentation for details:
+        http://docs.python-requests.org/en/master/user/advanced/
+        '''
+        return request

@@ -22,9 +22,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 import datetime
 import tempfile
 
+from ckan.plugins import PluginImplementations
+from .interfaces import IExtractorRequest
+
 from pylons import config
 import pysolr
-import requests
+from requests import Request, Session
 
 
 def download_and_extract(resource_url):
@@ -33,8 +36,12 @@ def download_and_extract(resource_url):
 
     The extracted metadata is cleaned and returned.
     """
+    session = Session()
+    request = Request('GET', resource_url).prepare()
+    for plugin in PluginImplementations(IExtractorRequest):
+        request = plugin.extractor_before_request(request)
     with tempfile.NamedTemporaryFile() as f:
-        r = requests.get(resource_url, stream=True)
+        r = session.send(request, stream=True)
         r.raise_for_status()
         for chunk in r.iter_content(chunk_size=1024):
             f.write(chunk)
