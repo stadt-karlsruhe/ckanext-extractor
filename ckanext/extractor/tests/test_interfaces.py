@@ -21,6 +21,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from collections import defaultdict
 import functools
+import requests
 
 import mock
 from pylons import config
@@ -28,10 +29,11 @@ from pylons import config
 from ckan.tests import factories, helpers
 from ckan.plugins import implements, SingletonPlugin, PluginImplementations
 
-from ..interfaces import IExtractorPostprocessor
+from ..interfaces import IExtractorPostprocessor, IExtractorRequest
 from ..tasks import extract
 from .helpers import (assert_equal, get_metadata, assert_package_found,
                       assert_package_not_found)
+from nose.tools import assert_true
 
 
 RES_DICT =  {
@@ -91,10 +93,21 @@ class MockAfterIndexPostprocessor(MockPostprocessor):
         assert_package_found(METADATA['fulltext'], res_dict['package_id'])
 
 
+class MockBeforeRequest(MockPostprocessor):
+    implements(IExtractorRequest, inherit=True)
+
+    def extractor_before_request(self, request):
+        self.called += 1
+        assert_true(isinstance(request, requests.PreparedRequest))
+        request.url = 'http://test-url.example.com/file.pdf'
+        return request
+
+
 MockPostprocessor().disable()
 MockAfterExtractPostprocessor().disable()
 MockAfterSavePostprocessor().disable()
 MockAfterIndexPostprocessor().disable()
+MockBeforeRequest().disable()
 
 
 def with_plugin(cls):
@@ -144,3 +157,22 @@ class TestIExtractorPostprocessor(object):
         extract(config['__file__'], res_dict)
         assert_equal(plugin.called, 1)
 
+@mock.patch('ckanext.extractor.tasks.load_config')
+@mock.patch('ckanext.extractor.tasks.toolkit')
+@mock.patch('ckanext.extractor.tasks.index_for')
+@mock.patch('ckanext.extractor.lib.pysolr.Solr')
+@mock.patch('ckanext.extractor.lib.Session')
+class TestIExtractorRequest(object):
+
+    def setup(self):
+        self.res_dict = factories.Resource(**RES_DICT)
+
+    @with_plugin(MockBeforeRequest)
+    def test_before_request(self, session, solr, index_for, toolkit, load_config, plugin):
+        extract(config['__file__'], self.res_dict)
+        assert_equal(plugin.called, 1)
+        assert_true(session.called)
+        
+        name, args, kwargs = session.mock_calls[1]
+        assert_equal(name, '().send')
+        assert_equal(args[0].url, 'http://test-url.example.com/file.pdf')
