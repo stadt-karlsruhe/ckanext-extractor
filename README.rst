@@ -376,8 +376,8 @@ The interface offers 1 hook:
 
 - ``extractor_before_request(request)`` is called before the request
   is send to download the file for extraction. The ``request`` parameter
-  is a ``PreparedRequest`` object
-  `from the requests library <http://docs.python-requests.org/en/master/user/advanced/#prepared-requests>`_.
+  is a ``PreparedRequest`` object `from the requests library 
+  <http://docs.python-requests.org/en/master/user/advanced/#prepared-requests>`_.
 
 
 Development
