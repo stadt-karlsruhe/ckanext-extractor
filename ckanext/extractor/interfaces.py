@@ -89,11 +89,13 @@ class IExtractorRequest(plugins.Interface):
     The hooks provide a possibility to change the parameters of the request,
     e.g. if the remote server requires certain headers or authorization tokens
     or to completly alter the URL.
-
     '''
     def extractor_before_request(self, request):
         '''
         Change the PreparedRequest object according to your needs
+        
+        This function must return a PreparedRequest object, which could be
+        the original one after modifying it.
 
         See the requests documentation for details:
         http://docs.python-requests.org/en/master/user/advanced/
