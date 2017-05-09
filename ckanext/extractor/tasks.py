@@ -20,17 +20,23 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import datetime
+import logging
 import tempfile
+
+from sqlalchemy.orm.exc import NoResultFound
+from requests.exceptions import RequestException
 
 from ckan.lib.search import index_for
 from ckan.lib.celery_app import celery
 from ckan.plugins import PluginImplementations, toolkit
-from sqlalchemy.orm.exc import NoResultFound
 
 from .config import is_field_indexed, load_config
 from .model import ResourceMetadata, ResourceMetadatum
 from .lib import download_and_extract
 from .interfaces import IExtractorPostprocessor
+
+
+log = logging.getLogger(__name__)
 
 
 @celery.task(name='extractor.extract')
@@ -66,6 +72,9 @@ def extract(ini_path, res_dict):
         for key, value in extracted.iteritems():
             if is_field_indexed(key):
                 metadata.meta[key] = value
+    except RequestException as e:
+        log.warn('Failed to download resource data from "{}": {}'.format(
+                 res_dict['url'], e.message))
     finally:
         metadata.task_id = None
         metadata.save()

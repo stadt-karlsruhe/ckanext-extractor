@@ -20,16 +20,21 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import datetime
+import logging
+import re
 
 import mock
 from pylons import config
 from nose.tools import assert_false, assert_true
+from requests.exceptions import RequestException
 
 from ckan.tests import factories
+from ckan.tests.helpers import FunctionalTestBase
 
 from ..tasks import extract
 from .helpers import (assert_equal, assert_time_span, get_metadata,
-                      assert_package_found, assert_package_not_found)
+                      assert_package_found, assert_package_not_found,
+                      recorded_logs)
 
 
 RES_DICT =  {
@@ -46,9 +51,10 @@ METADATA =  {
 
 @mock.patch('ckanext.extractor.tasks.download_and_extract',
             return_value=METADATA)
-class TestMetadataExtractTask(object):
+@mock.patch('ckanext.extractor.tasks.load_config')
+class TestMetadataExtractTask(FunctionalTestBase):
 
-    def test_new(self, _):
+    def test_new(self, lc_mock, dae_mock):
         """
         Metadata extraction without previous metadata.
         """
@@ -74,7 +80,7 @@ class TestMetadataExtractTask(object):
         assert_package_not_found(METADATA['created'], res_dict['package_id'],
                                  'Wrong metadata indexed.')
 
-    def test_update(self, _):
+    def test_update(self, lc_mock, dae_mock):
         """
         Metadata extraction of indexed format with previous metadata.
         """
@@ -108,4 +114,15 @@ class TestMetadataExtractTask(object):
                              'Metadata not indexed.')
         assert_package_not_found(METADATA['created'], res_dict['package_id'],
                                  'Wrong metadata indexed.')
+
+    def test_download_errors(self, lc_mock, dae_mock):
+        """
+        Handling of errors during resource downloading.
+        """
+        dae_mock.side_effect = RequestException('OH NOES')
+        res_dict = factories.Resource(**RES_DICT)
+        with recorded_logs() as logs:
+            extract(config['__file__'], res_dict)
+        logs.assert_log('warning', re.escape(res_dict['url']))
+        logs.assert_log('warning', 'OH NOES')
 
