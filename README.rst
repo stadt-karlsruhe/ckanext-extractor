@@ -365,18 +365,18 @@ The interface offers 3 hooks:
   filtered, stored and indexed.
 
 
-Adjust the download request
-===========================
-The ``ckanext.extractor.interfaces.IExtractorRequest`` interface can be
-used to alter the request made to download the file for extraction. A typical
-use case would be to add headers, that the remote server requires or to change
-the URL.
+Adjusting the download request
+==============================
+The ``ckanext.extractor.interfaces.IExtractorRequest`` interface can be used to
+modify the HTTP request made for downloading a resource file for extraction. A
+typical use case would be to add custom authentication headers required by the
+remote server which are normally provided by the user's browser.
 
 The interface offers 1 hook:
 
-- ``extractor_before_request(request)`` is called before the request
-  is send to download the file for extraction. The ``request`` parameter
-  is a ``PreparedRequest`` object `from the requests library 
+- ``extractor_before_request(request)`` is called before a request is sent to
+  download a resource file for extraction. The ``request`` parameter is a
+  ``PreparedRequest`` object `from the requests library
   <http://docs.python-requests.org/en/master/user/advanced/#prepared-requests>`_.
 
 
