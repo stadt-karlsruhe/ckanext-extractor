@@ -84,20 +84,23 @@ class IExtractorPostprocessor(plugins.Interface):
 
 class IExtractorRequest(plugins.Interface):
     '''
-    Plugin into the requests made to download content for extraction.
+    Alter HTTP download requests.
 
-    The hooks provide a possibility to change the parameters of the request,
-    e.g. if the remote server requires certain headers or authorization tokens
-    or to completly alter the URL.
+    This interface allows you to modify the HTTP request for downloading
+    a resource file, e.g. if the remote server requires certain
+    authentication headers.
     '''
     def extractor_before_request(self, request):
         '''
-        Change the PreparedRequest object according to your needs
-        
-        This function must return a PreparedRequest object, which could be
-        the original one after modifying it.
+        Alter a HTTP download request.
 
-        See the requests documentation for details:
-        http://docs.python-requests.org/en/master/user/advanced/
+        ``request`` is a ``PreparedRequest`` object.
+
+        This function must return a ``PreparedRequest`` object, which
+        can either be the original request after it has been modified or
+        a completely new one.
+
+        Details can be found in the `requests documentation
+        <http://docs.python-requests.org/en/master/user/advanced/>`_.
         '''
         return request
