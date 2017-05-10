@@ -4,7 +4,7 @@ The format of this file is based on [Keep a Changelog], and this
 project uses [Semantic Versioning].
 
 
-## [Unreleased]
+## [0.3.0] (2017-05-10)
 
 ### Added
 
@@ -40,6 +40,7 @@ project uses [Semantic Versioning].
 [Keep a Changelog]: http://keepachangelog.com
 [Semantic Versioning]: http://semver.org/
 
-[Unreleased]: https://github.com/stadt-karlsruhe/ckanext-extractor/compare/v0.2.0...master
+[Unreleased]: https://github.com/stadt-karlsruhe/ckanext-extractor/compare/v0.3.0...master
+[0.3.0]: https://github.com/stadt-karlsruhe/ckanext-extractor/compare/v0.3.0...v0.2.0
 [0.2.0]: https://github.com/stadt-karlsruhe/ckanext-extractor/compare/v0.1.0...v0.2.0
 
