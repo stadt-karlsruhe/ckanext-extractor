@@ -4,6 +4,14 @@ The format of this file is based on [Keep a Changelog], and this
 project uses [Semantic Versioning].
 
 
+## [Unreleased]
+
+### Changed
+
+- Don't validate package dicts when re-indexing them (contributed by
+  [@wardi](https://github.com/stadt-karlsruhe/ckanext-extractor/pull/6))
+
+
 ## [0.3.0] (2017-05-10)
 
 ### Added
