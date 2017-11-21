@@ -87,6 +87,28 @@ class ExtractorPlugin(plugins.SingletonPlugin):
         if _is_resource(obj):
             ctx = dict(context, ignore_auth=True)
             get_action('extractor_extract')(ctx, obj)
+        else:
+            # If a previously private package became public then we need to
+            # extract all its resources. However, we don't have the old
+            # package dict (there's no `before_update` in IPackageController),
+            # so we simply re-extract all resources if for any updated public
+            # dataset. If the resources didn't change then this won't add much
+            # overhead.
+            #
+            # If, on the other hand, the package is private then we prune all
+            # the metadata for all its resources to avoid leaking information
+            # via the `extractor_list` and `extractor_show` action functions.
+            if obj.get('private', True):
+                for res_dict in obj.get('resources', []):
+                    try:
+                        ctx = dict(context, ignore_auth=True)
+                        get_action('extractor_delete')(ctx, res_dict)
+                    except toolkit.ObjectNotFound:
+                        pass
+            else:
+                for res_dict in obj.get('resources', []):
+                    ctx = dict(context, ignore_auth=True)
+                    get_action('extractor_extract')(ctx, res_dict)
 
     #
     # IResourceController

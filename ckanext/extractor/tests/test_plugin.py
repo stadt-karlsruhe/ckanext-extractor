@@ -28,8 +28,9 @@ from ckan.lib.search import index_for
 from ckan.tests import factories, helpers
 from ckan.lib.celery_app import celery
 
-from .helpers import (assert_equal, get_metadata, assert_no_metadata,
-                      assert_package_found, assert_package_not_found)
+from .helpers import (assert_equal, get_metadata, assert_metadata,
+                      assert_no_metadata, assert_package_found,
+                      assert_package_not_found)
 from ..model import ResourceMetadata
 from ..plugin import ExtractorPlugin
 
@@ -92,7 +93,7 @@ class TestHooks(helpers.FunctionalTestBase):
                              'Metadata not added to index.')
         assert_package_found(METADATA['author'], res_dict['package_id'],
                              'Metadata not added to index.')
-        helpers.call_action('resource_delete', {'ignore_auth': True}, **res_dict)
+        helpers.call_action('resource_delete', **res_dict)
         assert_package_not_found(METADATA['fulltext'], res_dict['package_id'],
                                  'Metadata not removed from index.')
         assert_package_not_found(METADATA['author'], res_dict['package_id'],
@@ -105,4 +106,31 @@ class TestHooks(helpers.FunctionalTestBase):
         """
         res_dict = factories.Resource(url='foo', format='not-indexed')
         helpers.call_action('resource_delete', {'ignore_auth': True}, **res_dict)
+
+    def test_extraction_after_public_dataset_update(self, send_task):
+        """
+        If a public dataset is updated then its resources are extracted.
+        """
+        pkg_dict = factories.Dataset()
+        res_dict = factories.Resource(package_id=pkg_dict['id'], **RES_DICT)
+        pkg_dict = helpers.call_action('package_show', id=pkg_dict['id'])
+        helpers.call_action('extractor_delete', id=res_dict['id'])
+        send_task.reset_mock()
+        helpers.call_action('package_update', **pkg_dict)
+        assert_equal(send_task.call_count, 1,
+                     'Wrong number of extraction tasks.')
+
+    def test_deletion_after_private_dataset_update(self, send_task):
+        """
+        If a private dataset is updated its resources' metadata is removed.
+        """
+        user = factories.Sysadmin()
+        org_dict = factories.Organization()
+        pkg_dict = factories.Dataset(owner_org=org_dict['id'])
+        res_dict = factories.Resource(package_id=pkg_dict['id'], **RES_DICT)
+        pkg_dict = helpers.call_action('package_show', id=pkg_dict['id'])
+        pkg_dict['private'] = True
+        assert_metadata(res_dict)
+        helpers.call_action('package_update', {'user': user['id']}, **pkg_dict)
+        assert_no_metadata(res_dict)
 

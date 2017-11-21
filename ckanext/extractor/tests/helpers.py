@@ -31,6 +31,7 @@ import time
 from celery import current_app
 import mock
 from nose.tools import assert_raises, assert_true, assert_false
+from sqlalchemy.orm.exc import NoResultFound
 
 from ckan.logic import NotAuthorized, ValidationError
 from ckan.tests.helpers import call_action
@@ -72,6 +73,17 @@ def assert_no_metadata(res_dict):
     if ResourceMetadatum.filter_by(resource_id=res_dict['id']).count() > 0:
         raise AssertionError(('Found unexcepted metadatum for resource '
                              + '"{id}".').format(id=res_dict['id']))
+
+
+def assert_metadata(res_dict):
+    """
+    Assert that metadata is stored for a resource.
+    """
+    try:
+        get_metadata(res_dict)
+    except NoResultFound:
+        raise AssertionError('No metadata found for resource "{id}".'.format(
+                             id=res_dict['id']))
 
 
 def get_metadata(res_dict):
