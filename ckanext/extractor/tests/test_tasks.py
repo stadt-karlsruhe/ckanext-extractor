@@ -28,6 +28,7 @@ from pylons import config
 from nose.tools import assert_false, assert_true
 from requests.exceptions import RequestException
 
+from ckan.plugins import toolkit
 from ckan.tests import factories
 from ckan.tests.helpers import FunctionalTestBase
 
@@ -125,4 +126,16 @@ class TestMetadataExtractTask(FunctionalTestBase):
             extract(config['__file__'], res_dict)
         logs.assert_log('warning', re.escape(res_dict['url']))
         logs.assert_log('warning', 'OH NOES')
+
+    def test_extraction_from_private_dataset(self, lc_mock, dae_mock):
+        """
+        Handling of resources in private datasets.
+        """
+        org_dict = factories.Organization()
+        pkg_dict = factories.Dataset(private=True, owner_org=org_dict['id'])
+        res_dict = factories.Resource(package_id=pkg_dict['id'], **RES_DICT)
+        with recorded_logs() as logs:
+            extract(config['__file__'], res_dict)
+        logs.assert_log('debug', 'private')
+        dae_mock.assert_not_called()
 

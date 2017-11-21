@@ -57,6 +57,18 @@ def extract(ini_path, res_dict):
     Any previously stored metadata for the resource is cleared.
     """
     load_config(ini_path)
+
+    # Get package data before doing any hard work so that we can fail
+    # early if the package is private.
+    try:
+        pkg_dict = toolkit.get_action('package_show')(
+                       {'validate': False}, {'id': res_dict['package_id']})
+    except toolkit.NotAuthorized:
+        log.debug(('Not extracting resource {} since it belongs to the ' +
+                  'private dataset {}.').format(res_dict['id'],
+                  res_dict['package_id']))
+        return
+
     try:
         metadata = ResourceMetadata.one(resource_id=res_dict['id'])
     except NoResultFound:
@@ -86,8 +98,6 @@ def extract(ini_path, res_dict):
     # we cannot rely on the automatic update that happens when a resource
     # is changed, since our extraction task runs asynchronously and may
     # be finished only when the automatic index update has already run.
-    pkg_dict = toolkit.get_action('package_show')(
-            {'validate': False}, {'id': res_dict['package_id']})
     index_for('package').update_dict(pkg_dict)
 
     for plugin in PluginImplementations(IExtractorPostprocessor):
