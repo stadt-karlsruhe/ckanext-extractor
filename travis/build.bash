@@ -3,18 +3,19 @@ set -e
 
 echo "This is travis-build.bash..."
 
+SOLR_VERSION=3.6.2
 
 echo "Installing the packages that CKAN requires..."
 sudo apt-get update -qq
-sudo apt-get install postgresql-$PGVERSION solr-tomcat libcommons-fileupload-java:amd64=1.2.2-1
+sudo apt-get install solr-tomcat=$SOLR_VERSION\* libcommons-fileupload-java
 
 echo "Downloading Solr plugins"
-wget http://archive.apache.org/dist/lucene/solr/1.4.1/apache-solr-1.4.1.tgz
-tar xzf apache-solr-1.4.1.tgz
-sudo mv -v apache-solr-1.4.1 /var/apache-solr
+wget http://archive.apache.org/dist/lucene/solr/$SOLR_VERSION/apache-solr-$SOLR_VERSION.tgz
+tar xzf apache-solr-$SOLR_VERSION.tgz
+sudo mv -v apache-solr-$SOLR_VERSION /var/apache-solr
 
 echo "Configure Solr"
-sudo cp -v travis/solr/* /etc/solr/conf/
+sudo cp -v travis/solr/ckan-$CKANVERSION/* /etc/solr/conf/
 
 echo "Restarting Tomcat"
 sudo service tomcat6 restart
@@ -29,22 +30,27 @@ curl http://127.0.0.1:8080/solr/admin/ping
 echo "Installing CKAN and its Python dependencies..."
 git clone https://github.com/ckan/ckan
 cd ckan
-export latest_ckan_release_branch=`git branch --all | grep remotes/origin/release-v | sort -r | sed 's/remotes\/origin\///g' | head -n 1`
-echo "CKAN branch: $latest_ckan_release_branch"
-git checkout $latest_ckan_release_branch
+if [ $CKANVERSION == 'master' ]
+then
+    echo "CKAN version: master"
+else
+    CKAN_TAG=$(git tag | grep ^ckan-$CKANVERSION | sort --version-sort | tail -n 1)
+    git checkout $CKAN_TAG
+    echo "CKAN version: ${CKAN_TAG#ckan-}"
+fi
 python setup.py develop
-pip install -r requirements.txt --allow-all-external
-pip install -r dev-requirements.txt --allow-all-external
+pip install -r requirements.txt
+pip install -r dev-requirements.txt
 cd -
+
+echo "Creating the PostgreSQL user and database..."
+sudo -u postgres psql -c "CREATE USER ckan_default WITH PASSWORD 'pass';"
+sudo -u postgres psql -c 'CREATE DATABASE ckan_test WITH OWNER ckan_default;'
 
 echo "Installing ckanext-extractor and its requirements..."
 python setup.py develop
 pip install -r requirements.txt
 pip install -r dev-requirements.txt
-
-echo "Creating the PostgreSQL user and database..."
-sudo -u postgres psql -c "CREATE USER ckan_default WITH PASSWORD 'pass';"
-sudo -u postgres psql -c 'CREATE DATABASE ckan_test WITH OWNER ckan_default;'
 
 echo "Moving test.ini into a subdir..."
 mkdir subdir
