@@ -132,7 +132,7 @@ URL ``/api/3/action/extractor_list``, e.g. via
 
     wget -qO - http://localhost/api/3/action/extractor_list
 
-The output should look like this (in particular, ``success`` should ``true``)::
+The output should look like this (in particular, ``success`` should be ``true``)::
 
     {"help": "http://localhost/api/3/action/help_show?name=extractor_list", "success": true, "result": []}
 
