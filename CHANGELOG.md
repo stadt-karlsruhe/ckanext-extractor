@@ -4,14 +4,12 @@ The format of this file is based on [Keep a Changelog], and this
 project uses [Semantic Versioning].
 
 
-## [Unreleased]
-
-### Changed
-
-- Don't validate package dicts when re-indexing them (contributed by
-  [@wardi](https://github.com/stadt-karlsruhe/ckanext-extractor/pull/6))
+## [0.3.1] (2017-11-22)
 
 ### Fixed
+
+- Don't validate package dicts when re-indexing them (reported and contributed
+  by [@wardi](https://github.com/stadt-karlsruhe/ckanext-extractor/pull/6))
 
 - Fixed a crash when trying to extract from a resource in a private dataset.
   Private datasets are now ignored. (reported by
@@ -55,6 +53,7 @@ project uses [Semantic Versioning].
 [Semantic Versioning]: http://semver.org/
 
 [Unreleased]: https://github.com/stadt-karlsruhe/ckanext-extractor/compare/v0.3.0...master
+[0.3.1]: https://github.com/stadt-karlsruhe/ckanext-extractor/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/stadt-karlsruhe/ckanext-extractor/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/stadt-karlsruhe/ckanext-extractor/compare/v0.1.0...v0.2.0
 
