@@ -11,6 +11,12 @@ project uses [Semantic Versioning].
 - Don't validate package dicts when re-indexing them (contributed by
   [@wardi](https://github.com/stadt-karlsruhe/ckanext-extractor/pull/6))
 
+### Fixed
+
+- Fixed a crash when trying to extract from a resource in a private dataset.
+  Private datasets are now ignored. (reported by
+  [@gjackson12](https://github.com/gjackson12))
+
 
 ## [0.3.0] (2017-05-10)
 
