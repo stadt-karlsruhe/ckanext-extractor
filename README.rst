@@ -18,8 +18,8 @@ your data.
 
 Requirements
 ============
-*ckanext-extractor* has been developed and tested with CKAN 2.6. Other
-versions may or may not work.
+*ckanext-extractor* has been developed and tested with CKAN 2.6 and later.
+Other versions may or may not work.
 
 
 Installation
