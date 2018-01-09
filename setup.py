@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2016-2017 Stadt Karlsruhe (www.karlsruhe.de)
+# Copyright (C) 2016-2018 Stadt Karlsruhe (www.karlsruhe.de)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published

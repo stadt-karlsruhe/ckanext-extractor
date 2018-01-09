@@ -408,7 +408,7 @@ See the file `CHANGELOG.md`.
 
 License
 =======
-Copyright (C) 2016-2017 Stadt Karlsruhe (www.karlsruhe.de)
+Copyright (C) 2016-2018 Stadt Karlsruhe (www.karlsruhe.de)
 
 Distributed under the GNU Affero General Public License. See the file
 ``LICENSE`` for details.
