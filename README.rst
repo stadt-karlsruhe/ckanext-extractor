@@ -201,7 +201,9 @@ By default, only the full text of a document is indexed::
     ckanext.extractor.indexed_fields = fulltext
 
 **Note:** *ckanext-extractor* normalizes the field names reported by Solr by
-replacing underscores (``_``) with hyphens (``-``).
+replacing underscores (``_``) with hyphens (``-``). In addition, multiple
+values for the same field in the same document are collapsed into a single
+value.
 
 
 Paster Commands

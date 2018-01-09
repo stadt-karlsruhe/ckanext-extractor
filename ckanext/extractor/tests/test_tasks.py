@@ -131,6 +131,7 @@ class TestMetadataExtractTask(FunctionalTestBase):
         """
         Handling of resources in private datasets.
         """
+        # See https://github.com/stadt-karlsruhe/ckanext-extractor/issues/8
         org_dict = factories.Organization()
         pkg_dict = factories.Dataset(private=True, owner_org=org_dict['id'])
         res_dict = factories.Resource(package_id=pkg_dict['id'], **RES_DICT)
@@ -138,4 +139,20 @@ class TestMetadataExtractTask(FunctionalTestBase):
             extract(config['__file__'], res_dict)
         logs.assert_log('debug', 'private')
         dae_mock.assert_not_called()
+
+    def test_multiple_values_for_the_same_field(self, lc_mock, dae_mock):
+        """
+        Handling of multiple values for the same metadata field.
+        """
+        # See https://github.com/stadt-karlsruhe/ckanext-extractor/issues/11
+        dae_mock.return_value = {
+            'fulltext': 'foobar',
+            'author': ['john_doe', 'jane_doe'],
+        }
+        res_dict = factories.Resource(**RES_DICT)
+        with recorded_logs() as logs:
+            extract(config['__file__'], res_dict)
+        logs.assert_log('debug', 'Collapsing.*author')
+        metadata = get_metadata(res_dict)
+        assert_equal(metadata.meta['author'], 'john_doe, jane_doe')
 

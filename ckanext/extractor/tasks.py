@@ -82,8 +82,19 @@ def extract(ini_path, res_dict):
         for plugin in PluginImplementations(IExtractorPostprocessor):
             plugin.extractor_after_extract(res_dict, extracted)
         for key, value in extracted.iteritems():
-            if is_field_indexed(key):
-                metadata.meta[key] = value
+            if not is_field_indexed(key):
+                continue
+
+            # Some documents contain multiple values for the same field. This
+            # is not supported in our database model, hence we collapse these
+            # into a single value.
+            if isinstance(value, list):
+                log.debug('Collapsing multiple values for metadata field ' +
+                          '"{}" in resource {} into a single value.'.format(key,
+                          res_dict['id']))
+                value = ', '.join(value)
+
+            metadata.meta[key] = value
     except RequestException as e:
         log.warn('Failed to download resource data from "{}": {}'.format(
                  res_dict['url'], e.message))
