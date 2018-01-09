@@ -5,6 +5,12 @@ sudo: required
 python:
     - "2.7"
 
+services:
+    - postgresql
+
+addons:
+    postgresql: "9.4"
+
 env:
     - CKANVERSION=master
     - CKANVERSION=2.7
