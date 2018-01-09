@@ -4,6 +4,14 @@ The format of this file is based on [Keep a Changelog], and this
 project uses [Semantic Versioning].
 
 
+## [Unreleased]
+
+### Fixed
+
+- Handling of multiple values for the same metadata field (reported by
+  [@gjackson12](https://github.com/stadt-karlsruhe/ckanext-extractor/issues/11))
+
+
 ## [0.3.1] (2017-11-22)
 
 ### Fixed
@@ -13,7 +21,7 @@ project uses [Semantic Versioning].
 
 - Fixed a crash when trying to extract from a resource in a private dataset.
   Private datasets are now ignored. (reported by
-  [@gjackson12](https://github.com/gjackson12))
+  [@gjackson12](https://github.com/stadt-karlsruhe/ckanext-extractor/issues/8))
 
 
 ## [0.3.0] (2017-05-10)
@@ -52,7 +60,7 @@ project uses [Semantic Versioning].
 [Keep a Changelog]: http://keepachangelog.com
 [Semantic Versioning]: http://semver.org/
 
-[Unreleased]: https://github.com/stadt-karlsruhe/ckanext-extractor/compare/v0.3.0...master
+[Unreleased]: https://github.com/stadt-karlsruhe/ckanext-extractor/compare/v0.3.1...master
 [0.3.1]: https://github.com/stadt-karlsruhe/ckanext-extractor/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/stadt-karlsruhe/ckanext-extractor/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/stadt-karlsruhe/ckanext-extractor/compare/v0.1.0...v0.2.0
