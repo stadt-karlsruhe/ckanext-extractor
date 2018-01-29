@@ -47,7 +47,7 @@ dependencies::
 On a production system you'll probably want to pin a certain `release version`_
 of *ckanext-extractor* instead::
 
-    pip install -e git+https://github.com/stadt-karlsruhe/ckanext-extractor@v0.3.1#egg=ckanext-extractor
+    pip install -e git+https://github.com/stadt-karlsruhe/ckanext-extractor@v0.4.0#egg=ckanext-extractor
 
 .. _release version: https://github.com/stadt-karlsruhe/ckanext-extractor/releases
 
