@@ -6,6 +6,14 @@ project uses [Semantic Versioning].
 
 ## [Unreleased]
 
+### Changed
+
+- Moved from CKAN's deprecated, Celery-based background task system to the
+  [new system](http://docs.ckan.org/en/latest/maintaining/background-tasks.html)
+  introduced in CKAN 2.7. Users of CKAN 2.6 and older need to install
+  [ckanext-rq](https://github.com/ckan/ckanext-rq). See the README for details
+  ([#9](https://github.com/stadt-karlsruhe/ckanext-extractor/issues/9))
+
 ### Fixed
 
 - Handling of multiple values for the same metadata field (reported by
