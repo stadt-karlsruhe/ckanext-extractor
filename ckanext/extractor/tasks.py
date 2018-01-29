@@ -27,7 +27,6 @@ from sqlalchemy.orm.exc import NoResultFound
 from requests.exceptions import RequestException
 
 from ckan.lib.search import index_for
-from ckan.lib.celery_app import celery
 from ckan.plugins import PluginImplementations, toolkit
 
 from .config import is_field_indexed, load_config
@@ -39,7 +38,6 @@ from .interfaces import IExtractorPostprocessor
 log = logging.getLogger(__name__)
 
 
-@celery.task(name='extractor.extract')
 def extract(ini_path, res_dict):
     """
     Download resource, extract and store metadata.

@@ -21,6 +21,11 @@ Requirements
 *ckanext-extractor* has been developed and tested with CKAN 2.6 and later.
 Other versions may or may not work.
 
+Since *ckanext-extractor* relies on the background job system introduced in
+CKAN 2.7, users of earlier CKAN versions need to also install ckanext-rq_.
+
+.. _ckanext_rq: https://github.com/ckan/ckanext-rq
+
 
 Installation
 ============
@@ -58,18 +63,16 @@ Initialize the database::
     paster --plugin=ckanext-extractor init -c /etc/ckan/default/production.ini
 
 
-Start Celery Daemon
--------------------
-*ckanext-extractor* uses Celery background tasks to perform the extraction
+Start Background Worker
+-----------------------
+*ckanext-extractor* uses background jobs to perform the extraction
 asynchronously so that they do not block the web server. You therefore need to
-make sure that Celery is running, for example using
+make sure that a CKAN background worker is running::
 
-::
+    paster --plugin=ckan jobs worker --config=/etc/ckan/default/production.ini
 
-    paster --plugin=ckan celeryd -c /etc/ckan/default/production.ini
-
-See the `CKAN documentation`_ for more information on Celery.
-
+See the `CKAN documentation`_ for more information on background jobs and for
+tips on how to run workers in production environments.
 
 .. _`CKAN documentation`: http://docs.ckan.org/en/latest/maintaining/background-tasks.html
 
@@ -243,8 +246,8 @@ Replace ``COMMAND`` and ``ARGUMENTS`` as described below. For example::
   scheduled for that resource.
 
   Note that this command only schedules the necessary extraction background
-  tasks. The Celery daemon has to be running for the extraction to actually
-  happen.
+  tasks. A background jobs worker has to be running for the extraction to
+  actually happen.
 
 - ``init``: Initialize the database tables for *ckanext-extractor*. You only
   need to use this once (during the installation).

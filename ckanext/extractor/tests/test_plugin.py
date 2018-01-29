@@ -22,11 +22,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 import datetime
 
 import mock
+from sqlalchemy.orm.exc import NoResultFound
 
 from ckan.model import Package
 from ckan.lib.search import index_for
 from ckan.tests import factories, helpers
-from ckan.lib.celery_app import celery
 
 from .helpers import (assert_equal, get_metadata, assert_metadata,
                       assert_no_metadata, assert_package_found,
@@ -47,9 +47,12 @@ METADATA =  {
 }
 
 
-def send_task(name, args, **opts):
+def enqueue_job(name, args, **opts):
     res_dict = args[1]
-    metadata = get_metadata(res_dict)
+    try:
+        metadata = get_metadata(res_dict)
+    except NoResultFound:
+        metadata = ResourceMetadata.create(resource_id=res_dict['id'])
     metadata.last_format = res_dict['format']
     metadata.last_url = res_dict['url']
     metadata.last_extracted = datetime.datetime.now()
@@ -58,33 +61,35 @@ def send_task(name, args, **opts):
     metadata.save()
     pkg_dict = helpers.call_action('package_show', id=res_dict['package_id'])
     index_for('package').update_dict(pkg_dict)
+    return mock.Mock(id=None)
 
 
-@mock.patch.object(celery, 'send_task', side_effect=send_task)
+@mock.patch('ckanext.extractor.logic.action.enqueue_job',
+            side_effect=enqueue_job)
 class TestHooks(helpers.FunctionalTestBase):
     """
     Test that extraction and indexing happens automatically.
     """
-    def test_extraction_upon_resource_creation(self, send_task):
+    def test_extraction_upon_resource_creation(self, enqueue_job):
         """
         Metadata is extracted and indexed after resource creation.
         """
         factories.Resource(**RES_DICT)
-        assert_equal(send_task.call_count, 1,
+        assert_equal(enqueue_job.call_count, 1,
                      'Wrong number of extraction tasks.')
 
-    def test_extraction_upon_resource_update(self, send_task):
+    def test_extraction_upon_resource_update(self, enqueue_job):
         """
         Metadata is extracted and indexed after resource update.
         """
         res_dict = factories.Resource(**RES_DICT)
-        send_task.reset_mock()
+        enqueue_job.reset_mock()
         res_dict['format'] = 'doc'  # Change format to trigger new extraction
         helpers.call_action('resource_update', **res_dict)
-        assert_equal(send_task.call_count, 1,
+        assert_equal(enqueue_job.call_count, 1,
                      'Wrong number of extraction tasks.')
 
-    def test_deletion_upon_resource_deletion(self, send_task):
+    def test_deletion_upon_resource_deletion(self, enqueue_job):
         """
         Metadata is removed when a resource is deleted.
         """
@@ -100,14 +105,14 @@ class TestHooks(helpers.FunctionalTestBase):
                                  'Metadata not removed from index.')
         assert_no_metadata(res_dict)
 
-    def test_resource_deletion_with_no_metadata(self, send_task):
+    def test_resource_deletion_with_no_metadata(self, enqueue_job):
         """
         A resource that doesn't have metadata can be removed.
         """
         res_dict = factories.Resource(url='foo', format='not-indexed')
         helpers.call_action('resource_delete', {'ignore_auth': True}, **res_dict)
 
-    def test_extraction_after_public_dataset_update(self, send_task):
+    def test_extraction_after_public_dataset_update(self, enqueue_job):
         """
         If a public dataset is updated then its resources are extracted.
         """
@@ -115,12 +120,12 @@ class TestHooks(helpers.FunctionalTestBase):
         res_dict = factories.Resource(package_id=pkg_dict['id'], **RES_DICT)
         pkg_dict = helpers.call_action('package_show', id=pkg_dict['id'])
         helpers.call_action('extractor_delete', id=res_dict['id'])
-        send_task.reset_mock()
+        enqueue_job.reset_mock()
         helpers.call_action('package_update', **pkg_dict)
-        assert_equal(send_task.call_count, 1,
+        assert_equal(enqueue_job.call_count, 1,
                      'Wrong number of extraction tasks.')
 
-    def test_deletion_after_private_dataset_update(self, send_task):
+    def test_deletion_after_private_dataset_update(self, enqueue_job):
         """
         If a private dataset is updated its resources' metadata is removed.
         """

@@ -165,10 +165,3 @@ class ExtractorPlugin(plugins.SingletonPlugin):
             'extractor_show': auth.extractor_show,
         }
 
-
-def task_imports():
-    """
-    Entry point for Celery task list.
-    """
-    return ['ckanext.extractor.tasks']
-

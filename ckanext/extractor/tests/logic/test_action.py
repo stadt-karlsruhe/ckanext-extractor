@@ -19,6 +19,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import uuid
+
 import mock
 from nose.tools import assert_false, assert_raises, assert_true
 
@@ -32,6 +34,10 @@ from ..helpers import (assert_anonymous_access, assert_authorized, assert_equal,
                        assert_no_anonymous_access, assert_no_metadata,
                        assert_not_authorized, get_metadata, fake_process,
                        assert_validation_fails)
+
+
+def enqueue_job(*args, **kwargs):
+    return mock.Mock(id=str(uuid.uuid4()))
 
 
 class TestExtractorList(FunctionalTestBase):
@@ -66,25 +72,26 @@ class TestExtractorList(FunctionalTestBase):
         assert_anonymous_access('extractor_list')
 
 
-@mock.patch('ckan.lib.celery_app.celery.send_task')
+@mock.patch('ckanext.extractor.logic.action.enqueue_job',
+            side_effect=enqueue_job)
 class TestExtractorExtract(FunctionalTestBase):
 
-    def test_extractor_extract_new_indexed(self, send_task):
+    def test_extractor_extract_new_indexed(self, enqueue_job):
         """
         extractor_extract for a new resource with indexed format.
         """
         res_dict = factories.Resource(format='pdf')
         get_metadata(res_dict).delete().commit()
-        send_task.reset_mock()
+        enqueue_job.reset_mock()
         result = call_action('extractor_extract', id=res_dict['id'])
         assert_equal(result['status'], 'new', 'Wrong state')
         assert_false(result['task_id'] is None, 'Missing task ID')
         assert_equal(result['task_id'], get_metadata(res_dict).task_id,
                      'Task IDs differ.')
-        assert_equal(send_task.call_count, 1,
+        assert_equal(enqueue_job.call_count, 1,
                      'Wrong number of extraction tasks.')
 
-    def test_extractor_extract_new_ignored(self, send_task):
+    def test_extractor_extract_new_ignored(self, enqueue_job):
         """
         extractor_extract for a new resource with ignored format.
         """
@@ -92,30 +99,30 @@ class TestExtractorExtract(FunctionalTestBase):
         result = call_action('extractor_extract', id=res_dict['id'])
         assert_equal(result['status'], 'ignored', 'Wrong state')
         assert_true(result['task_id'] is None, 'Unexpected task ID')
-        assert_equal(send_task.call_count, 0,
+        assert_equal(enqueue_job.call_count, 0,
                      'Wrong number of extraction tasks.')
 
-    def test_extractor_extract_unchanged(self, send_task):
+    def test_extractor_extract_unchanged(self, enqueue_job):
         """
         extractor_extract for a resource with unchanged format and URL.
         """
         res_dict = factories.Resource(format='pdf')
-        send_task.reset_mock()
+        enqueue_job.reset_mock()
         fake_process(res_dict)
         result = call_action('extractor_extract', id=res_dict['id'])
         assert_equal(result['status'], 'unchanged', 'Wrong state')
         assert_true(result['task_id'] is None, 'Unexpected task ID')
         assert_equal(result['task_id'], get_metadata(res_dict).task_id,
                      'Task IDs differ.')
-        assert_equal(send_task.call_count, 0,
+        assert_equal(enqueue_job.call_count, 0,
                      'Wrong number of extraction tasks.')
 
-    def test_extractor_extract_update_indexed_format(self, send_task):
+    def test_extractor_extract_update_indexed_format(self, enqueue_job):
         """
         extractor_extract for a resource with updated, indexed format.
         """
         res_dict = factories.Resource(format='pdf')
-        send_task.reset_mock()
+        enqueue_job.reset_mock()
         fake_process(res_dict)
 
         resource = Resource.get(res_dict['id'])
@@ -127,15 +134,15 @@ class TestExtractorExtract(FunctionalTestBase):
         assert_false(result['task_id'] is None, 'Missing task ID')
         assert_equal(result['task_id'], get_metadata(res_dict).task_id,
                      'Task IDs differ.')
-        assert_equal(send_task.call_count, 1,
+        assert_equal(enqueue_job.call_count, 1,
                      'Wrong number of extraction tasks.')
 
-    def test_extractor_extract_update_ignored_format(self, send_task):
+    def test_extractor_extract_update_ignored_format(self, enqueue_job):
         """
         extractor_extract for a resource with updated, ignored format.
         """
         res_dict = factories.Resource(format='pdf')
-        send_task.reset_mock()
+        enqueue_job.reset_mock()
         fake_process(res_dict)
 
         resource = Resource.get(res_dict['id'])
@@ -145,24 +152,24 @@ class TestExtractorExtract(FunctionalTestBase):
         result = call_action('extractor_extract', id=res_dict['id'])
         assert_equal(result['status'], 'ignored', 'Wrong state')
         assert_true(result['task_id'] is None, 'Unexpected task ID')
-        assert_equal(send_task.call_count, 0,
+        assert_equal(enqueue_job.call_count, 0,
                      'Wrong number of extraction tasks.')
         assert_no_metadata(res_dict)
 
-    def test_extractor_extract_inprogress(self, send_task):
+    def test_extractor_extract_inprogress(self, enqueue_job):
         """
         extractor_extract for a resource that's already being extracted.
         """
         res_dict = factories.Resource(format='pdf')
-        send_task.reset_mock()
+        enqueue_job.reset_mock()
         old_task_id = get_metadata(res_dict).task_id
         result = call_action('extractor_extract', id=res_dict['id'])
         assert_equal(result['status'], 'inprogress', 'Wrong state')
         assert_equal(result['task_id'], old_task_id, 'Task IDs differ.')
-        assert_equal(send_task.call_count, 0,
+        assert_equal(enqueue_job.call_count, 0,
                      'Wrong number of extraction tasks.')
 
-    def test_extractor_extract_unexisting(self, send_task):
+    def test_extractor_extract_unexisting(self, enqueue_job):
         """
         extractor_extract for a resource that does not exist.
         """
@@ -170,7 +177,7 @@ class TestExtractorExtract(FunctionalTestBase):
             NotFound, lambda: call_action('extractor_extract',
             id='does-not-exist'))
 
-    def test_extractor_extract_auth(self, send_task):
+    def test_extractor_extract_auth(self, enqueue_job):
         """
         Authorization for extractor_extract.
         """
@@ -183,7 +190,7 @@ class TestExtractorExtract(FunctionalTestBase):
                           "Sysadmin wasn't allowed to extractor_extract",
                           id=res_dict['id'])
 
-    def test_extractor_extract_validation(self, send_task):
+    def test_extractor_extract_validation(self, enqueue_job):
         """
         Input validation for extractor_extract.
         """
@@ -192,7 +199,7 @@ class TestExtractorExtract(FunctionalTestBase):
                                 'Wrong force type was accepted',
                                 force='maybe')
 
-    def test_extractor_extract_force_ignored_format(self, send_task):
+    def test_extractor_extract_force_ignored_format(self, enqueue_job):
         """
         Forcing extractor_extract with ignored format.
         """
@@ -201,15 +208,15 @@ class TestExtractorExtract(FunctionalTestBase):
                              force=True)
         assert_equal(result['status'], 'ignored', 'Wrong state')
         assert_true(result['task_id'] is None, 'Unexpected task ID')
-        assert_equal(send_task.call_count, 0,
+        assert_equal(enqueue_job.call_count, 0,
                      'Wrong number of extraction tasks.')
 
-    def test_extractor_extract_force_unchanged(self, send_task):
+    def test_extractor_extract_force_unchanged(self, enqueue_job):
         """
         Forcing extractor_extract with unchanged resource.
         """
         res_dict = factories.Resource(format='pdf')
-        send_task.reset_mock()
+        enqueue_job.reset_mock()
         fake_process(res_dict)
         result = call_action('extractor_extract', id=res_dict['id'],
                              force=True)
@@ -217,15 +224,15 @@ class TestExtractorExtract(FunctionalTestBase):
         assert_false(result['task_id'] is None, 'Missing task ID')
         assert_equal(result['task_id'], get_metadata(res_dict).task_id,
                      'Task IDs differ.')
-        assert_equal(send_task.call_count, 1,
+        assert_equal(enqueue_job.call_count, 1,
                      'Wrong number of extraction tasks.')
 
-    def test_extractor_extract_force_inprogress(self, send_task):
+    def test_extractor_extract_force_inprogress(self, enqueue_job):
         """
         Forcing extractor_extract with existing task.
         """
         res_dict = factories.Resource(format='pdf')
-        send_task.reset_mock()
+        enqueue_job.reset_mock()
         old_task_id = get_metadata(res_dict).task_id
 
         result = call_action('extractor_extract', id=res_dict['id'],
@@ -236,14 +243,15 @@ class TestExtractorExtract(FunctionalTestBase):
                      'Task IDs differ.')
         assert_false(result['task_id'] == old_task_id,
                      'Task ID was not updated.')
-        assert_equal(send_task.call_count, 1,
+        assert_equal(enqueue_job.call_count, 1,
                      'Wrong number of extraction tasks.')
 
 
-@mock.patch('ckan.lib.celery_app.celery.send_task')
+@mock.patch('ckanext.extractor.logic.action.enqueue_job',
+            return_value=mock.Mock(id='test-id'))
 class TestExtractorShow(FunctionalTestBase):
 
-    def test_extractor_show_unexisting(self, send_task):
+    def test_extractor_show_unexisting(self, enqueue_job):
         """
         extractor_show for a resource that does not exist.
         """
@@ -251,16 +259,15 @@ class TestExtractorShow(FunctionalTestBase):
             NotFound, lambda: call_action('extractor_show',
             id='does-not-exist'))
 
-    def test_extractor_show_inprogress(self, send_task):
+    def test_extractor_show_inprogress(self, enqueue_job):
         """
         extractor_show for metadata that is in progress.
         """
         res_dict = factories.Resource(format='pdf')
-        task_id = send_task.call_args[1]['task_id']
         result = call_action('extractor_show', id=res_dict['id'])
-        assert_equal(result['task_id'], task_id, 'Wrong task ID.')
+        assert_equal(result['task_id'], 'test-id', 'Wrong task ID.')
 
-    def test_extractor_show_normal(self, send_task):
+    def test_extractor_show_normal(self, enqueue_job):
         """
         extractor_show for normal metadata.
         """
@@ -277,7 +284,7 @@ class TestExtractorShow(FunctionalTestBase):
                      'Wrong resource ID.')
         assert_true(result['task_id'] is None, 'Unexpected task ID.')
 
-    def test_extractor_show_auth(self, send_task):
+    def test_extractor_show_auth(self, enqueue_job):
         """
         Authorization for extractor_show.
         """
@@ -287,7 +294,7 @@ class TestExtractorShow(FunctionalTestBase):
                           id=res_dict['id'])
         assert_anonymous_access('extractor_show', id=res_dict['id'])
 
-    def test_extractor_show_validation(self, send_task):
+    def test_extractor_show_validation(self, enqueue_job):
         """
         Input validation for extractor_show.
         """
@@ -295,10 +302,11 @@ class TestExtractorShow(FunctionalTestBase):
                                 'ID was not required.')
 
 
-@mock.patch('ckan.lib.celery_app.celery.send_task')
+@mock.patch('ckanext.extractor.logic.action.enqueue_job',
+            side_effect=enqueue_job)
 class TestExtractorDelete(FunctionalTestBase):
 
-    def test_extractor_delete_unexisting(self, send_task):
+    def test_extractor_delete_unexisting(self, enqueue_job):
         """
         extractor_delete for a resource that does not exist.
         """
@@ -306,7 +314,7 @@ class TestExtractorDelete(FunctionalTestBase):
             NotFound, lambda: call_action('extractor_delete',
             id='does-not-exist'))
 
-    def test_extractor_delete_normal(self, send_task):
+    def test_extractor_delete_normal(self, enqueue_job):
         """
         extractor_delete for a normal resource.
         """
@@ -315,7 +323,7 @@ class TestExtractorDelete(FunctionalTestBase):
         call_action('extractor_delete', id=res_dict['id'])
         assert_no_metadata(res_dict)
 
-    def test_extractor_delete_auth(self, send_task):
+    def test_extractor_delete_auth(self, enqueue_job):
         """
         Authorization for extractor_delete.
         """
@@ -328,7 +336,7 @@ class TestExtractorDelete(FunctionalTestBase):
                           "Sysadmin wasn't allowed to extractor_delete",
                           id=res_dict['id'])
 
-    def test_extractor_delete_validation(self, send_task):
+    def test_extractor_delete_validation(self, enqueue_job):
         """
         Input validation for extractor_delete.
         """

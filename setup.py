@@ -112,9 +112,6 @@ setup(
         [ckan.plugins]
         extractor=ckanext.extractor.plugin:ExtractorPlugin
 
-        [ckan.celery_task]
-        tasks = ckanext.extractor.plugin:task_imports
-
         [babel.extractors]
         ckan = ckan.lib.extract:extract_ckan
 

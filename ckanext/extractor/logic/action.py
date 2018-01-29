@@ -20,7 +20,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
-import uuid
 
 import ckan.plugins.toolkit as toolkit
 from ckan.logic import validate
@@ -31,6 +30,13 @@ from . import schema
 from .helpers import check_access
 from ..model import ResourceMetadata, ResourceMetadatum
 from ..config import is_format_indexed
+from ..tasks import extract
+
+try:
+    enqueue_job = toolkit.enqueue_job
+except AttributeError:
+    # CKAN 2.6 or older
+    from ckanext.rq.jobs import enqueue as enqueue_job
 
 
 log = logging.getLogger(__name__)
@@ -106,8 +112,6 @@ def extractor_extract(context, data_dict):
 
     """
     log.debug('extractor_extract {}'.format(data_dict['id']))
-    # Late import at call time because it requires a running app
-    from ckan.lib.celery_app import celery
     force = data_dict.get('force', False)
     resource = toolkit.get_action('resource_show')(context, data_dict)
     task_id = None
@@ -133,12 +137,13 @@ def extractor_extract(context, data_dict):
         else:
             status = 'ignored'
     if status in ('new', 'update') or (status != 'ignored' and force):
+        args = (config['__file__'], resource)
+        title = 'Metadata extraction for resource {}'.format(resource['id'])
         if metadata is None:
             metadata = ResourceMetadata.create(resource_id=resource['id'])
-        task_id = metadata.task_id = str(uuid.uuid4())
+        job = enqueue_job(extract, args, title=title)
+        task_id = metadata.task_id = job.id
         metadata.save()
-        args = (config['__file__'], resource)
-        celery.send_task('extractor.extract', args, task_id=task_id)
     return {
         'status': status,
         'task_id': task_id,

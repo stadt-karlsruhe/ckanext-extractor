@@ -28,7 +28,6 @@ from SocketServer import TCPServer
 from threading import Thread
 import time
 
-from celery import current_app
 import mock
 from nose.tools import assert_raises, assert_true, assert_false
 from sqlalchemy.orm.exc import NoResultFound

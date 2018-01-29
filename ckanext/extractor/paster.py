@@ -99,8 +99,8 @@ class ExtractCommand(ExtractorCommand):
     the resource hasn't changed or another extraction task for the
     resource is already in progress.
 
-    Note that Celery must be running, this command only schedules the
-    necessary background tasks.
+    Note that a background jobs worker must be running, this command
+    only schedules the necessary background tasks.
     """
     max_args = None
     min_args = None
