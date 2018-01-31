@@ -24,7 +24,7 @@ Other versions may or may not work.
 Since *ckanext-extractor* relies on the background job system introduced in
 CKAN 2.7, users of earlier CKAN versions need to also install ckanext-rq_.
 
-.. _ckanext_rq: https://github.com/ckan/ckanext-rq
+.. _ckanext-rq: https://github.com/ckan/ckanext-rq
 
 
 Installation
