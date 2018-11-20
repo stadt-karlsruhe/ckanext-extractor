@@ -26,7 +26,7 @@ import tempfile
 from sqlalchemy.orm.exc import NoResultFound
 from requests.exceptions import RequestException
 
-from ckan.lib.search import index_for
+from ckan.lib import search
 from ckan.plugins import PluginImplementations, toolkit
 
 from .config import is_field_indexed, load_config
@@ -107,8 +107,7 @@ def extract(ini_path, res_dict):
     # we cannot rely on the automatic update that happens when a resource
     # is changed, since our extraction task runs asynchronously and may
     # be finished only when the automatic index update has already run.
-    index_for('package').update_dict(pkg_dict)
+    search.rebuild(package_id=res_dict['package_id'])
 
     for plugin in PluginImplementations(IExtractorPostprocessor):
         plugin.extractor_after_index(res_dict, metadata.as_dict())
-
