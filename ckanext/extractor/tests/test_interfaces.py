@@ -159,7 +159,7 @@ class TestIExtractorPostprocessor(object):
 
 @mock.patch('ckanext.extractor.tasks.load_config')
 @mock.patch('ckanext.extractor.tasks.toolkit')
-@mock.patch('ckanext.extractor.tasks.index_for')
+@mock.patch('ckanext.extractor.tasks.search')
 @mock.patch('ckanext.extractor.lib.pysolr.Solr')
 @mock.patch('ckanext.extractor.lib.Session')
 class TestIExtractorRequest(object):
@@ -168,11 +168,11 @@ class TestIExtractorRequest(object):
         self.res_dict = factories.Resource(**RES_DICT)
 
     @with_plugin(MockBeforeRequest)
-    def test_before_request(self, session, solr, index_for, toolkit, load_config, plugin):
+    def test_before_request(self, session, solr, search, toolkit, load_config, plugin):
         extract(config['__file__'], self.res_dict)
         assert_equal(plugin.called, 1)
         assert_true(session.called)
-        
+
         name, args, kwargs = session.mock_calls[1]
         assert_equal(name, '().send')
         assert_equal(args[0].url, 'http://test-url.example.com/file.pdf')

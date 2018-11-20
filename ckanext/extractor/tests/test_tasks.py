@@ -28,6 +28,7 @@ from pylons import config
 from nose.tools import assert_false, assert_true
 from requests.exceptions import RequestException
 
+from ckan.lib import search
 from ckan.plugins import toolkit
 from ckan.tests import factories
 from ckan.tests.helpers import FunctionalTestBase
@@ -155,4 +156,29 @@ class TestMetadataExtractTask(FunctionalTestBase):
         logs.assert_log('debug', 'Collapsing.*author')
         metadata = get_metadata(res_dict)
         assert_equal(metadata.meta['author'], 'john_doe, jane_doe')
+
+    def test_package_update_race_condition(self, lc_mock, dae_mock):
+        """
+        Handling of package updates during extraction.
+        """
+        res_dict = factories.Resource(**RES_DICT)
+        sysadmin = factories.Sysadmin()
+
+        def download_and_extract(*args, **kwargs):
+            # Simulate a change to the package by another party during
+            # the download and extraction process.
+            toolkit.get_action('package_patch')({'user': sysadmin['name']},
+                                                {'id': res_dict['package_id'],
+                                                 'title': 'A changed title'})
+            return {'fulltext': 'foobar'}
+
+        dae_mock.side_effect = download_and_extract
+        extract(config['__file__'], res_dict)
+
+        # Make sure that the changed package metadata is kept and indexed
+        pkg_dict = toolkit.get_action('package_show')(
+                {}, {'id': res_dict['package_id']})
+        assert_equal(pkg_dict['title'], 'A changed title')
+        indexed_pkg_dict = search.show(res_dict['package_id'])
+        assert_equal(indexed_pkg_dict['title'], 'A changed title')
 
